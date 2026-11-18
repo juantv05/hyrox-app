@@ -22,22 +22,31 @@
   --accent:#f2c200; --accent-ink:#141714; --olive:#a9b98c; --ok:#5fbf82; --warn:#e3995a; --bad:#ff6b5b;
   --t-agm:#a3a9b3; --t-fuerza:#e09a5f; --t-carrera:#6cc0dd; --t-aerobico:#6fcf93; --t-hyrox:#f2c200; --t-rec:#b8a7e0; --t-desc:#8b938d; --t-man:#a9b98c; color-scheme:dark}}
 *{box-sizing:border-box}
-html{scroll-padding-top:64px;overflow-x:hidden;-webkit-text-size-adjust:100%;touch-action:pan-x pan-y}
+html{scroll-padding-top:64px;overflow-x:clip;-webkit-text-size-adjust:100%;touch-action:pan-x pan-y}
 html,body{width:100%;max-width:100vw;overscroll-behavior-x:none}
-body{overflow-x:hidden}
+body{overflow-x:clip}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;padding-bottom:calc(var(--navh) + env(safe-area-inset-bottom) + 24px)}
-header{position:sticky;top:0;z-index:5;background:var(--ink);color:var(--bg);padding:8px max(14px,env(safe-area-inset-left));padding-top:max(8px,env(safe-area-inset-top));display:flex;align-items:center;gap:10px}
+header{position:sticky;top:0;z-index:7;background:color-mix(in srgb,var(--bg) 88%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:var(--ink);border-bottom:1px solid var(--line);padding:8px max(14px,env(safe-area-inset-left));padding-top:max(8px,env(safe-area-inset-top));display:flex;align-items:center;gap:10px}
 .brand{font-family:var(--display);font-weight:800;font-size:20px;text-transform:uppercase;letter-spacing:.02em;flex:1}
 .brand span{background:var(--accent);color:var(--accent-ink);padding:0 6px;margin-right:6px}
-#sync{font-family:var(--mono);font-size:11.5px;padding:2px 8px;border:1px solid rgba(255,255,255,.35)}
-#sync.pend{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-header button{background:none;border:0;color:inherit;font-size:20px;padding:2px 8px;cursor:pointer}
+#bMenu{position:relative;background:none;border:0;color:inherit;padding:4px 2px;cursor:pointer;display:flex}
+#bMenu svg{width:26px;height:26px;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+#bMenu.pend::after{content:"";position:absolute;top:3px;right:0;width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.menu{position:fixed;inset:0;z-index:9;background:rgba(10,12,10,.55);display:none}
+.menu.on{display:block}
+.menu .pan{position:absolute;top:0;right:0;width:min(78vw,300px);height:100%;background:var(--surface);color:var(--ink);padding:max(16px,env(safe-area-inset-top)) 0 16px;box-shadow:-12px 0 40px rgba(0,0,0,.3);display:flex;flex-direction:column}
+.menu .pan h3{font-family:var(--display);font-weight:800;font-size:24px;text-transform:uppercase;margin:0 18px 10px}
+.menu .pan button{display:flex;align-items:center;gap:12px;background:none;border:0;border-top:1px solid var(--line);color:var(--ink);font:inherit;font-size:16px;padding:14px 18px;text-align:left;cursor:pointer}
+.menu .pan button:last-of-type{border-bottom:1px solid var(--line)}
+.menu .pan .st2{font-family:var(--mono);font-size:12px;color:var(--muted);margin:14px 18px 0}
+#sync.pend{color:var(--warn)}
 /* barra inferior */
-nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--ink);display:grid;grid-template-columns:repeat(5,1fr);padding-bottom:env(safe-area-inset-bottom);border-top:2px solid var(--accent)}
-nav.tabs button{background:none;border:0;color:var(--muted);height:var(--navh);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-family:var(--display);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;cursor:pointer;min-width:0}
-nav.tabs svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-nav.tabs button[aria-selected=true]{color:var(--accent)}
-@media (prefers-color-scheme:light){nav.tabs button{color:#9aa39c}}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:grid;grid-template-columns:repeat(5,1fr);padding-bottom:env(safe-area-inset-bottom);
+  background:linear-gradient(to top,var(--bg) 70%,color-mix(in srgb,var(--bg) 0%,transparent));-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+nav.tabs button{background:none;border:0;color:var(--ink);opacity:.5;height:var(--navh);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-family:var(--display);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.01em;cursor:pointer;min-width:0;position:relative;transition:opacity .2s;white-space:nowrap;overflow:hidden}
+nav.tabs svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+nav.tabs button[aria-selected=true]{opacity:1}
+nav.tabs button[aria-selected=true]::before{content:"";position:absolute;top:6px;width:18px;height:2px;background:var(--accent)}
 .view[hidden]{display:none!important}
 .wrapv,main,.nav,.week{max-width:760px;margin:0 auto;padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right))}
 .wrapv{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;padding-top:12px}
@@ -123,68 +132,11 @@ details.adj p{margin:4px 0;white-space:pre-wrap}
 .hs{border-top:1px solid var(--line);padding:6px 0}.hs>summary{color:var(--ink)!important;font-size:13px!important}
 .hs ul{margin:4px 0 2px;padding-left:18px;font-size:13px}
 .info{background:none;border:1px solid var(--line);color:var(--muted);font-family:var(--mono);font-size:11px;padding:0 6px;margin-left:6px;cursor:pointer;vertical-align:middle}
-.calc{display:grid;gap:8px}.calc label{display:grid;gap:3px;font-family:var(--mono);font-size:11px;text-transform:uppercase;color:var(--muted)}
-.calc .res{font-family:var(--mono);font-size:14px;background:var(--soft);padding:8px 10px;white-space:pre-wrap}
-.calc .g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.kv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid var(--line);background:var(--surface)}
-.kv div{padding:10px 12px;border-right:1px solid var(--line)}.kv div:last-child{border-right:0}
-.kv span{display:block;font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
-.kv b{font-family:var(--display);font-size:24px;font-weight:700}
-.tbl{background:var(--surface);border:1px solid var(--line)}
-.tbl table{border-collapse:collapse;width:100%;font-size:13.5px;table-layout:fixed}
-.tbl td,.tbl th{overflow-wrap:anywhere}
-.tbl th,.tbl td{border-bottom:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
-.tbl tr:last-child td{border-bottom:0}
-.tbl th{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;color:var(--muted);font-weight:500;letter-spacing:.04em;background:var(--soft)}
-.tbl td.num{font-family:var(--mono)}
-.goal{display:grid;gap:4px;padding:8px 0;border-bottom:1px solid var(--line)}.goal:last-child{border-bottom:0}
-.goal .gh{display:flex;justify-content:space-between;gap:8px;font-weight:600}
-.goal .gh span{font-family:var(--mono);font-size:12.5px;font-weight:400;color:var(--muted)}
-.bar{height:8px;background:var(--soft);position:relative}.bar i{position:absolute;inset:0 auto 0 0;background:var(--olive)}
-.md h4{font-family:var(--display);font-weight:700;font-size:17px;text-transform:uppercase;letter-spacing:.03em;margin:10px 0 4px;color:var(--olive)}
-.md ul{margin:4px 0;padding-left:18px;display:grid;gap:5px}.md p{margin:6px 0}
-/* progreso */
-.chart{width:100%;height:auto;display:block}
-.chart text{font-family:var(--mono);font-size:10px;fill:var(--muted)}
-.chart .ln{fill:none;stroke:var(--olive);stroke-width:2}
-.chart .pt{fill:var(--accent);stroke:var(--ink);stroke-width:1}
-.chart .gr{stroke:var(--line);stroke-width:1}
-.chart .br{fill:var(--olive)}
-/* temporada */
-.cd{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border:1px solid var(--line);background:var(--surface)}
-.cd div{padding:10px;border-right:1px solid var(--line)}.cd div:last-child{border-right:0}
-.cd b{display:block;font-family:var(--display);font-size:30px;font-weight:800;line-height:1}
-.cd span{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;color:var(--muted)}
-.cd small{display:block;font-size:12px;color:var(--muted)}
-.ph{display:grid;grid-template-columns:96px 1fr;border-bottom:1px solid var(--line)}.ph:last-child{border-bottom:0}
-.ph .pd{padding:10px;border-right:1px solid var(--line);font-family:var(--mono);font-size:11.5px;color:var(--muted)}
-.ph .pc{padding:10px 12px;display:grid;gap:3px;min-width:0}
-.ph .pn{font-family:var(--display);font-weight:700;font-size:19px;text-transform:uppercase;line-height:1.1}
-.ph.cur{background:var(--soft)}.ph.cur .pn::after{content:"Ahora";margin-left:8px;font-family:var(--mono);font-size:10.5px;background:var(--accent);color:var(--accent-ink);padding:1px 6px;vertical-align:middle}
-.ph .pk{font-size:13px;color:var(--muted)}
-/* control */
-.beta{font-family:var(--mono);font-size:12px;background:var(--accent);color:var(--accent-ink);padding:6px 10px}
-.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.fgrid label{display:grid;gap:3px;font-family:var(--mono);font-size:11px;text-transform:uppercase;color:var(--muted);letter-spacing:.04em}
-.fgrid .full{grid-column:1/-1}
-.seg{display:flex;border:1px solid var(--line)}.seg button{flex:1;background:var(--bg);border:0;border-right:1px solid var(--line);color:var(--ink);padding:7px 2px;font-family:var(--mono);font-size:11.5px;cursor:pointer}.seg button:last-child{border-right:0}
-.seg button.on{background:var(--ink);color:var(--bg)}
-dialog{border:0;padding:16px;width:min(92vw,420px);background:var(--surface);color:var(--ink)}
-dialog input{margin:4px 0 10px}
-dialog.xp{padding:0;width:min(720px,calc(100vw - 24px));max-height:calc(100dvh - 32px);box-shadow:0 18px 60px rgba(0,0,0,.35)}
-dialog.xp::backdrop,dialog::backdrop{background:rgba(10,12,10,.55)}
-.xph{position:sticky;top:0;background:var(--ink);color:var(--bg);display:flex;align-items:center;gap:10px;padding:12px 16px}
-.xph h3{margin:0;font-family:var(--display);font-weight:800;font-size:22px;text-transform:uppercase;line-height:1.05}
-.xph small{display:block;font-family:var(--mono);font-size:11px;opacity:.75;text-transform:uppercase;letter-spacing:.05em}
-.xph button{margin-left:auto;background:var(--accent);color:var(--accent-ink);border:0;font-family:var(--mono);font-size:13px;padding:6px 12px;cursor:pointer}
-.xpb{padding:6px 18px 22px;font-size:14.5px;line-height:1.55}
-.xpb h4{font-family:var(--display);font-weight:700;font-size:17px;text-transform:uppercase;letter-spacing:.03em;margin:16px 0 4px;color:var(--olive)}
-.xpb h4.rev{color:var(--warn)}
-.xpb ul{margin:4px 0;padding-left:18px;display:grid;gap:6px}.xpb p{margin:6px 0}
 </style>
 </head>
 <body>
-<header><div class="brand"><span>HX</span><b id="vtitle">Entreno</b></div><span id="sync">—</span><button id="bCalc" title="Calculadoras">∑</button><button id="bSync" title="Actualizar">⟳</button><button id="bCfg" title="Ajustes">⚙</button></header>
+<header><div class="brand"><span>HX</span><b id="vtitle">Entreno</b></div><button id="bMenu" aria-label="Menú"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></header>
+<div class="menu" id="menu"><div class="pan"><h3>Menú</h3><button id="bSync">⟳&nbsp; Actualizar datos</button><button id="bCfg">⚙&nbsp; Ajustes</button><div class="st2">Estado: <span id="sync">—</span></div></div></div>
 
 <section class="view" id="v-entreno">
  <div class="nav"><button id="prev">◀</button><div class="d" id="dTitle"></div><button id="next">▶</button></div>
@@ -213,8 +165,6 @@ dialog.xp::backdrop,dialog::backdrop{background:rgba(10,12,10,.55)}
  <div class="state" id="cMsg"></div>
  <div class="btns"><button id="cTest">Probar y guardar</button><button id="cClose">Cerrar</button></div>
 </dialog>
-<dialog class="xp" id="calc"><div class="xph"><div><small>Herramientas</small><h3>Calculadoras</h3></div><button type="button" id="calcC">Cerrar</button></div><div class="xpb">
- <div class="seg" id="calcT" style="margin:10px 0"><button class="on" data-t="discos">Discos</button><button data-t="lastre">Fondos y dominadas</button><button data-t="hyrox">Hyrox</button></div><div id="calcB"></div></div></dialog>
 <dialog class="xp" id="xp"><div class="xph"><div><small id="xps"></small><h3 id="xpt"></h3></div><button type="button" id="xpc">Cerrar</button></div><div class="xpb" id="xpb"></div></dialog>
 
 <script>
@@ -304,7 +254,8 @@ async function sincronizar(){
 function pintaSync(txt){
   const el = document.getElementById("sync");
   if (txt){ el.textContent = txt; el.className = ""; return; }
-  if (cola.length){ el.textContent = `${cola.length} pendiente${cola.length>1?"s":""}`; el.className = "pend"; }
+  document.getElementById("bMenu").classList.toggle("pend", cola.length > 0);
+  if (cola.length){ el.textContent = `${cola.length} pendiente${cola.length>1?"s":""} de enviar`; el.className = "pend"; }
   else { el.textContent = LS.get("planAt", 0) ? "Al día" : "Sin datos"; el.className = ""; }
 }
 
@@ -764,35 +715,6 @@ function pintaControl(){
     doc[b.closest("[data-seg]").dataset.seg] = b.dataset.val; LS.set("ctrl", ctrl); pintaControl(); };
 }
 
-/* ================= CALCULADORAS ================= */
-const calcD = document.getElementById("calc");
-const mmss = t => { const m = String(t||"").trim().match(/^(\d+)(?::(\d{1,2}))?$/); return m ? (+m[1])*60 + (+(m[2]||0)) : NaN; };
-const fmt = s => `${Math.floor(s/60)}:${String(Math.round(s%60)).padStart(2,"0")}`;
-const ESTACIONES = ["SkiErg 1000 m","Sled push 50 m","Sled pull 50 m","Burpee broad jumps 80 m","Remo 1000 m","Farmers carry 200 m","Sandbag lunges 100 m","Wall balls 100"];
-function calcPinta(t){
-  const b = document.getElementById("calcB"), masa = (meta.atleta && meta.atleta.masa_corporal_kg) || 77, H = LS.get("calcHyrox", {ritmo:"4:15", est:["4:00","","","","4:00","","",""], rox:"5:00"});
-  document.querySelectorAll("#calcT button").forEach(x => x.classList.toggle("on", x.dataset.t === t));
-  if (t === "discos") b.innerHTML = `<div class="calc"><div class="g2"><label>Peso total (kg)<input id="cdK" inputmode="decimal" value="100"></label><label>Barra (kg)<input id="cdB" inputmode="decimal" value="20"></label></div><div class="res" id="cdR"></div><div class="nt">Discos supuestos: 25, 20, 15, 10, 5, 2,5 y 1,25 kg.</div></div>`;
-  if (t === "lastre") b.innerHTML = `<div class="calc"><div class="g2"><label>Peso corporal (kg)<input id="clM" inputmode="decimal" value="${masa}"></label><label>Lastre (kg)<input id="clL" inputmode="decimal" value="50"></label></div><label>Repeticiones<input id="clR" inputmode="numeric" value="3"></label><div class="res" id="clX"></div><div class="nt">1RM estimado con la fórmula de Epley sobre el peso total. Es una estimación: por encima de ~10 repeticiones pierde precisión.</div></div>`;
-  if (t === "hyrox") b.innerHTML = `<div class="calc"><div class="g2"><label>Ritmo por km (m:ss)<input id="chR" value="${esc(H.ritmo)}"></label><label>Roxzone total (m:ss)<input id="chX" value="${esc(H.rox)}"></label></div>${ESTACIONES.map((n, i) => `<label>${n} (m:ss)<input data-e="${i}" value="${esc(H.est[i] || "")}" placeholder="m:ss"></label>`).join("")}<div class="res" id="chT"></div><div class="nt">Pon tus tiempos objetivo por estación; el total suma 8 km de carrera, las 8 estaciones y la roxzone. Ski y remo vienen con 4:00 (2:00/500, tu ritmo Hyrox de ergo).</div></div>`;
-  const upd = () => {
-    if (t === "discos"){ const k = +String(cdK.value).replace(",", "."), bar = +String(cdB.value).replace(",", "."); let lado = (k - bar)/2, out = [];
-      if (!(lado >= 0)){ cdR.textContent = "El peso debe ser mayor que la barra."; return; }
-      [25,20,15,10,5,2.5,1.25].forEach(d => { while (lado >= d - 1e-9){ out.push(d); lado -= d; } });
-      cdR.textContent = `Por lado: ${out.length ? out.map(num).join(" + ") : "nada"}${lado > 0.01 ? `\nSobran ${num(Math.round(lado*2*100)/100)} kg sin disco` : ""}`; }
-    if (t === "lastre"){ const m = +String(clM.value).replace(",", "."), l = +String(clL.value).replace(",", "."), r = +clR.value, tot = m + l, e1 = tot * (1 + r/30);
-      clX.textContent = `Peso total movido: ${num(Math.round(tot*10)/10)} kg\n1RM estimado: ${num(Math.round(e1))} kg total = ${e1 - m >= 0 ? "+" : ""}${num(Math.round(e1 - m))} kg de lastre\nEsta serie es el ${Math.round(tot/e1*100)} % de tu 1RM estimado`; }
-    if (t === "hyrox"){ const est = [...b.querySelectorAll("[data-e]")].map(x => x.value), rit = mmss(chR.value), rox = mmss(chX.value) || 0;
-      LS.set("calcHyrox", {ritmo:chR.value, est, rox:chX.value});
-      const vals = est.map(mmss), falt = vals.filter(v => isNaN(v)).length, carrera = rit * 8, suma = carrera + vals.filter(v => !isNaN(v)).reduce((a, v) => a + v, 0) + rox;
-      chT.textContent = isNaN(rit) ? "Pon un ritmo válido (m:ss)." : `Carrera 8 km: ${fmt(carrera)}\nEstaciones: ${fmt(suma - carrera - rox)}${falt ? ` (faltan ${falt})` : ""}\nRoxzone: ${fmt(rox)}\nTOTAL: ${fmt(suma)}${!falt ? (suma < 3600 ? `  ✓ ${fmt(3600 - suma)} por debajo de 1 h` : `  ✗ ${fmt(suma - 3600)} por encima de 1 h`) : ""}`; }
-  };
-  b.oninput = upd; upd();
-}
-document.getElementById("bCalc").onclick = () => { calcPinta("discos"); calcD.showModal(); };
-document.getElementById("calcC").onclick = () => calcD.close();
-document.getElementById("calcT").onclick = ev => { const x = ev.target.closest("[data-t]"); if (x) calcPinta(x.dataset.t); };
-
 /* ================= diálogos y arranque ================= */
 const xp = document.getElementById("xp");
 function abrirXp(sub, titulo, texto){
@@ -802,8 +724,11 @@ function abrirXp(sub, titulo, texto){
 document.getElementById("xpc").onclick = () => xp.close();
 const dlg = document.getElementById("cfg");
 function abrirCfg(){ document.getElementById("cTok").value = cfg.token; document.getElementById("cRepo").value = cfg.repo; document.getElementById("cMsg").textContent = ""; dlg.showModal(); }
-document.getElementById("bCfg").onclick = abrirCfg;
-document.getElementById("bSync").onclick = sincronizar;
+document.getElementById("bCfg").onclick = () => { menu.classList.remove("on"); abrirCfg(); };
+const menu = document.getElementById("menu");
+document.getElementById("bMenu").onclick = () => menu.classList.add("on");
+menu.onclick = ev => { if (ev.target === menu) menu.classList.remove("on"); };
+document.getElementById("bSync").onclick = () => { menu.classList.remove("on"); sincronizar(); };
 document.getElementById("cClose").onclick = () => dlg.close();
 document.getElementById("cTest").onclick = async () => {
   cfg.token = document.getElementById("cTok").value.trim(); cfg.repo = document.getElementById("cRepo").value.trim();
