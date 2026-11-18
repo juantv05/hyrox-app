@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14181f">
+<title>Hyrox 2027</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--ink:#14181f;--mut:#6b7280;--line:#e3e5e9;--acc:#d9480f;--ok:#2b8a3e;--warn:#e67700;--soft:#fff4e6}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1217;--card:#181c23;--ink:#e8eaed;--mut:#9aa1ab;--line:#2a2f38;--acc:#ff6b2c;--ok:#51cf66;--warn:#ffa94d;--soft:#2b2118}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding-bottom:40px}
+header{position:sticky;top:0;z-index:5;background:var(--ink);color:var(--bg);padding:10px 16px calc(10px) ;display:flex;align-items:center;gap:10px}
+header h1{font-size:16px;margin:0;flex:1}
+header button{background:none;border:0;color:inherit;font-size:20px;padding:4px 8px}
+#sync{font-size:12px;padding:3px 8px;border-radius:10px;background:rgba(255,255,255,.15)}
+#sync.pend{background:var(--warn);color:#000}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:10px 16px}
+.nav button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:6px 12px;font-size:15px}
+.nav .d{text-align:center}.nav .d b{display:block;font-size:17px}.nav .d small{color:var(--mut)}
+.week{display:flex;gap:4px;padding:0 16px 8px;overflow-x:auto}
+.week button{flex:1;min-width:40px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:4px 0;font-size:12px}
+.week button.sel{background:var(--acc);border-color:var(--acc);color:#fff}
+.week button.log::after{content:"•";display:block;color:var(--ok);line-height:6px}
+.week button.sel.log::after{color:#fff}
+main{padding:0 16px;max-width:720px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.card h2{font-size:16px;margin:0 0 4px}
+.tag{display:inline-block;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut);margin-right:6px}
+.mut{color:var(--mut)}.small{font-size:13px}
+.ex{border-top:1px solid var(--line);padding:10px 0}
+.ex:first-of-type{border-top:0}
+.ex .nm{font-weight:600}
+.ex .pl{font-size:13px;color:var(--mut)}
+.ex .nt{font-size:13px;color:var(--mut);font-style:italic}
+.rows{margin-top:6px}
+.row{display:grid;grid-template-columns:22px 1fr 1fr 64px 40px;gap:6px;align-items:center;margin:4px 0}
+.row .n{color:var(--mut);font-size:13px;text-align:center}
+.row label{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--mut)}
+.row input,.row select{width:100%;min-width:0;font-size:16px;padding:6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+.row input.chg{border-color:var(--warn)}
+.row .ck{height:36px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--mut);font-size:18px}
+.row.done .ck{background:var(--ok);border-color:var(--ok);color:#fff}
+.row.extra .n{color:var(--warn)}
+.btns{display:flex;gap:6px;margin-top:4px}
+.btns button,.btn{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:5px 10px;font-size:13px}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff;font-size:16px;padding:10px 14px;width:100%}
+.cond{background:var(--soft);border-radius:8px;padding:6px 10px;font-size:13px;margin-top:8px}
+.cond div{margin:2px 0}
+textarea{width:100%;font:inherit;font-size:16px;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);min-height:60px}
+.fin{border-top:1px solid var(--line);margin-top:8px;padding-top:10px}
+.fin .r{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.fin select{font-size:16px;padding:6px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.state{font-size:13px;margin-top:6px}
+.state.ok{color:var(--ok)}.state.pend{color:var(--warn)}
+.list{margin:4px 0 0;padding-left:18px;font-size:14px}.list li{margin:2px 0}
+dialog{border:0;border-radius:12px;padding:16px;width:min(92vw,420px);background:var(--card);color:var(--ink)}
+dialog input{width:100%;font-size:16px;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);margin:4px 0 10px}
+.empty{text-align:center;color:var(--mut);padding:40px 0}
+</style>
+</head>
+<body>
+<header><h1>Hyrox 2027</h1><span id="sync">—</span><button id="bSync" title="Actualizar">⟳</button><button id="bCfg" title="Ajustes">⚙</button></header>
+<div class="nav"><button id="prev">◀</button><div class="d" id="dTitle"></div><button id="next">▶</button></div>
+<div class="week" id="week"></div>
+<main id="main"></main>
+
+<dialog id="cfg">
+ <h2 style="margin-top:0">Ajustes</h2>
+ <label class="small">Token de GitHub (solo acceso a hyrox-datos)</label>
+ <input id="cTok" type="password" autocomplete="off">
+ <label class="small">Repositorio de datos</label>
+ <input id="cRepo" placeholder="usuario/repositorio">
+ <div class="state" id="cMsg"></div>
+ <div class="btns"><button id="cTest">Probar y guardar</button><button id="cClose">Cerrar</button></div>
+</dialog>
+
+<script>
+"use strict";
+/* ---------- almacenamiento local (todo con try/catch) ---------- */
+const LS = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v==null ? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+};
+const cfg = LS.get("cfg", {token:"", repo:"juantv05/hyrox-datos", rama:"main"});
+let plan = LS.get("plan", {});            // fecha -> día del plan
+let regs = LS.get("regs", {});            // fecha -> registro del día (borradores y terminados)
+let cola = LS.get("cola", []);            // fechas pendientes de enviar
+const hoyISO = () => { const d = new Date(); return new Date(d - d.getTimezoneOffset()*6e4).toISOString().slice(0,10); };
+let fecha = hoyISO();
+
+/* ---------- qué se registra en la app ---------- */
+// Lo que no registra el Garmin: fuerza, isométricos, acarreos, tests y movilidad.
+const REGISTRABLE = new Set(["fuerza","isometrico","acarreo","test"]);
+const esMovilidad = e => e.modo === "continuo" && e.categoria === "complemento";
+const registrable = e => REGISTRABLE.has(e.modo) || esMovilidad(e);
+const sesionRegistrable = s => s.estructurado && (s.ejercicios||[]).some(registrable);
+
+/* ---------- GitHub ---------- */
+const API = p => `https://api.github.com/repos/${cfg.repo}/contents/${p}`;
+async function gh(path, opt={}){
+  const r = await fetch(API(path) + (opt.method ? "" : `?ref=${cfg.rama}`), {
+    method: opt.method || "GET",
+    headers: Object.assign({Authorization:`Bearer ${cfg.token}`, "X-GitHub-Api-Version":"2022-11-28",
+      Accept: opt.raw ? "application/vnd.github.raw+json" : "application/vnd.github+json"}, opt.body ? {"Content-Type":"application/json"} : {}),
+    body: opt.body ? JSON.stringify(opt.body) : undefined, cache:"no-store"
+  });
+  if (r.status === 404) return null;
+  if (!r.ok) throw new Error(`GitHub ${r.status}`);
+  return opt.raw ? r.text() : r.json();
+}
+const b64 = s => btoa(String.fromCharCode(...new TextEncoder().encode(s)));
+
+async function bajarPlan(){
+  const idx = JSON.parse(await gh("plan/indice.json", {raw:true}));
+  const nuevo = {};
+  await Promise.all(idx.fechas.map(async f => { nuevo[f] = JSON.parse(await gh(`plan/${f}.json`, {raw:true})); }));
+  plan = nuevo; LS.set("plan", plan); LS.set("planAt", Date.now());
+}
+async function bajarRegistro(f){
+  if (regs[f]) return;                              // lo local manda
+  const t = await gh(`registros/${f}.json`, {raw:true});
+  if (t){ regs[f] = JSON.parse(t); LS.set("regs", regs); }
+}
+async function subir(f){
+  const path = `registros/${f}.json`;
+  const actual = await gh(path);                     // para el sha si ya existe
+  const contenido = JSON.stringify(regs[f], null, 1);
+  await gh(path, {method:"PUT", body:{message:`Registro ${f}`, content:b64(contenido), branch:cfg.rama, ...(actual ? {sha:actual.sha} : {})}});
+}
+async function vaciarCola(){
+  if (!cfg.token || !navigator.onLine || !cola.length) return pintaSync();
+  for (const f of [...cola]){
+    try{ await subir(f); cola = cola.filter(x => x !== f); LS.set("cola", cola);
+         Object.values(regs[f].sesiones).forEach(s => { if (s.terminada) s.enviada = true; }); LS.set("regs", regs); }
+    catch(e){ break; }
+  }
+  pintaSync(); render();
+}
+async function sincronizar(){
+  if (!cfg.token){ abrirCfg(); return; }
+  if (!navigator.onLine){ pintaSync("Sin red"); return; }
+  pintaSync("…");
+  try{ await vaciarCola(); await bajarPlan(); await bajarRegistro(fecha).catch(()=>{}); pintaSync(); render(); }
+  catch(e){ pintaSync("Error"); }
+}
+function pintaSync(txt){
+  const el = document.getElementById("sync");
+  if (txt){ el.textContent = txt; el.className = ""; return; }
+  if (cola.length){ el.textContent = `${cola.length} pendiente${cola.length>1?"s":""}`; el.className = "pend"; }
+  else { const t = LS.get("planAt", 0); el.textContent = t ? "Al día" : "Sin datos"; el.className = ""; }
+}
+
+/* ---------- textos del plan ---------- */
+const DIAS = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+const MESES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+const dt = f => new Date(f + "T12:00:00");
+const addD = (f, n) => { const d = dt(f); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); };
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const kgTxt = (kg, tipo) => kg == null ? "" : (tipo === "lastre" ? `+${kg} kg` : `${kg} kg`);
+const durTxt = s => s >= 60 ? `${Math.floor(s/60)}'${s%60 ? (s%60)+'"' : ""}` : `${s}"`;
+function resumenSeries(e){
+  const s = e.series || []; if (!s.length) return "";
+  const a = s[0], lado = a.por_lado ? "/lado" : "";
+  const carga = a.reps ?? (a.duracion_s ? durTxt(a.duracion_s) : a.distancia_m ? `${a.distancia_m} m` : "");
+  const igual = s.every(x => x.kg === a.kg && x.reps === a.reps);
+  let t = `${s.length}×${carga}${lado}`;
+  if (a.kg != null) t += igual ? ` @ ${kgTxt(a.kg, a.kg_tipo)}` : "";
+  if (a.rpe_obj) t += ` · RPE ${a.rpe_obj}`;
+  if (a.descanso_s) t += ` · desc. ${durTxt(a.descanso_s)}`;
+  return t;
+}
+function resumenContinuo(e){
+  const p = [];
+  if (e.distancia_km) p.push(`${e.distancia_km} km`);
+  if (e.duracion_min) p.push(`${e.duracion_min}'`);
+  if (e.fc) p.push(`FC ${e.fc}`);
+  if (e.ritmo) p.push(e.ritmo);
+  if (e.rpe_obj) p.push(`RPE ${e.rpe_obj}`);
+  return p.join(" · ");
+}
+function resumenRondas(e){
+  return `<ul class="list">${e.rondas.map(r => {
+    const es = r.estacion, c = r.carrera;
+    const det = es.partes ? es.partes.map(p => `${p.nombre} ${p.distancia_m ? p.distancia_m+" m" : ""}${p.reps ? p.reps : ""}`).join(" + ")
+      : [es.distancia_m && `${es.distancia_m} m`, es.reps && `${es.reps} reps`, es.kg && `${es.kg} kg`, es.ritmo].filter(Boolean).join(" · ");
+    return `<li>${c ? `${c.distancia_m} m (${c.ritmo}) → ` : ""}<b>${esc(es.nombre)}</b> ${esc(det)}${es.rpe_obj ? ` · RPE ${es.rpe_obj}` : ""}</li>`;
+  }).join("")}</ul>${e.objetivo ? `<div class="nt">${esc(e.objetivo)}</div>` : ""}`;
+}
+
+/* ---------- registro: estructura ---------- */
+// regs[fecha] = {fecha, sesiones:{[sid]:{titulo, terminada, enviada, terminada_en, rpe_sesion, nota, ejercicios:{[eid]:{nombre, series:[...], hecha, minutos}}}}}
+function regSesion(f, s){
+  regs[f] = regs[f] || {fecha:f, sesiones:{}};
+  let r = regs[f].sesiones[s.id];
+  if (!r){
+    r = regs[f].sesiones[s.id] = {titulo:s.titulo, terminada:false, ejercicios:{}};
+    s.ejercicios.filter(registrable).forEach(e => {
+      r.ejercicios[e.id] = esMovilidad(e)
+        ? {nombre:e.nombre, hecha:false, minutos:e.duracion_min ?? null}
+        : {nombre:e.nombre, series:(e.series||[]).map(x => ({n:x.n, kg:x.kg ?? null, reps:numReps(x.reps), duracion_s:x.duracion_s ?? null,
+            distancia_m:x.distancia_m ?? null, rpe:null, hecha:false, plan:{kg:x.kg ?? null, reps:x.reps ?? null, duracion_s:x.duracion_s ?? null, distancia_m:x.distancia_m ?? null, rpe:x.rpe_obj ?? null}}))};
+    });
+  }
+  return r;
+}
+// "8-10" -> 8 (precarga el mínimo); "máx" -> null
+function numReps(v){ if (v == null) return null; const m = String(v).match(/\d+/); return m ? +m[0] : null; }
+const guardar = () => LS.set("regs", regs);
+
+/* ---------- pintar ---------- */
+function render(){
+  const d = dt(fecha);
+  document.getElementById("dTitle").innerHTML = `<b>${DIAS[d.getDay()]} ${d.getDate()} ${MESES[d.getMonth()]}</b><small>${fecha === hoyISO() ? "Hoy" : ""}${plan[fecha] ? ` · Semana ${plan[fecha].semana ?? ""}` : ""}</small>`;
+  // semana lun-dom
+  const lun = addD(fecha, -((d.getDay()+6)%7));
+  document.getElementById("week").innerHTML = [0,1,2,3,4,5,6].map(i => {
+    const f = addD(lun, i), x = dt(f), log = regs[f] && Object.values(regs[f].sesiones).some(s => s.terminada);
+    return `<button data-f="${f}" class="${f===fecha?"sel":""} ${log?"log":""}">${DIAS[x.getDay()]}<br>${x.getDate()}</button>`;
+  }).join("");
+  const p = plan[fecha], m = document.getElementById("main");
+  if (!p){ m.innerHTML = `<div class="empty">${Object.keys(plan).length ? "No hay plan para este día." : "Pulsa ⚙ para conectar tus datos y luego ⟳."}</div>`; return; }
+  let h = "";
+  if (p.evento) h += `<div class="card"><b>${esc(p.evento)}</b></div>`;
+  for (const s of p.sesiones) h += sesionHTML(p, s);
+  m.innerHTML = h;
+}
+function sesionHTML(p, s){
+  if (s.tipo === "agm"){
+    return `<div class="card"><span class="tag">${esc(s.momento)} · AGM</span><h2>${esc(p.agm.codigo || s.titulo)}</h2><div class="small">${esc(p.agm.detalle || "")}</div>${s.apunte ? `<div class="nt small">${esc(s.apunte)}</div>` : ""}</div>`;
+  }
+  if (!s.estructurado) return `<div class="card"><span class="tag">${esc(s.momento)}</span><h2>${esc(s.titulo)}</h2><div class="small mut">${esc(s.nota || "")}</div></div>`;
+  const reg = sesionRegistrable(s);
+  const r = reg ? regSesion(p.fecha, s) : null;
+  let h = `<div class="card" data-sid="${s.id}"><span class="tag">${esc(s.momento)} · ${esc(s.tipo)}</span>${r && r.terminada ? `<span class="tag" style="color:var(--ok)">✓ registrada</span>` : ""}<h2>${esc(s.titulo)}</h2>`;
+  if (s.nota) h += `<div class="nt">${esc(s.nota)}</div>`;
+  for (const e of s.ejercicios) h += ejercicioHTML(s, e, r);
+  const conds = [...(s.condiciones||[]).map(c => `<div>⚠ <b>Si</b> ${esc(c.si)} → ${esc(c.entonces)}</div>`), ...(s.progresion||[]).map(c => `<div>↗ <b>Si</b> ${esc(c.si)} → ${esc(c.entonces)}</div>`)];
+  if (conds.length) h += `<div class="cond">${conds.join("")}</div>`;
+  if (r) h += finHTML(s, r);
+  return h + `</div>`;
+}
+function ejercicioHTML(s, e, r){
+  let h = `<div class="ex" data-eid="${e.id}"><div class="nm">${esc(e.nombre)}${e.categoria === "opcional" ? ` <span class="tag">opcional</span>` : ""}</div>`;
+  if (e.modo === "rondas") return h + resumenRondas(e) + `</div>`;
+  if (e.modo === "continuo"){
+    h += `<div class="pl">${esc(resumenContinuo(e))}</div>`;
+    if (e.nota) h += `<div class="nt">${esc(e.nota)}</div>`;
+    if (r && esMovilidad(e)){
+      const x = r.ejercicios[e.id];
+      h += `<div class="row ${x.hecha?"done":""}" style="grid-template-columns:1fr 90px 40px"><span class="small mut">Hecha</span><label><input type="number" inputmode="numeric" data-k="minutos" value="${x.minutos ?? ""}"> min</label><button class="ck" data-act="ck">✓</button></div>`;
+    } else if (r) h += `<div class="small mut">Se registra con el Garmin</div>`;
+    return h + `</div>`;
+  }
+  h += `<div class="pl">${esc(resumenSeries(e))}</div>`;
+  if (e.nota) h += `<div class="nt">${esc(e.nota)}</div>`;
+  if (!r) return h + `</div>`;
+  const x = r.ejercicios[e.id];
+  const tipo = (e.series && e.series[0]) || {};
+  const campoB = tipo.duracion_s != null ? ["duracion_s","s"] : tipo.distancia_m != null && tipo.reps == null ? ["distancia_m","m"] : ["reps","reps"];
+  const conKg = tipo.kg_tipo !== "peso_corporal";   // kg opcional en todo lo demás (pierna-pie, core…)
+  h += `<div class="rows">` + x.series.map((sr, i) => {
+    const kgChg = sr.plan && sr.plan.kg != null && sr.kg !== sr.plan.kg;
+    const bChg = sr.plan && numReps(sr.plan[campoB[0]]) != null && sr[campoB[0]] !== numReps(sr.plan[campoB[0]]);
+    return `<div class="row ${sr.hecha?"done":""} ${sr.plan?"":"extra"}" data-i="${i}">
+      <span class="n">${sr.n}</span>
+      ${conKg ? `<label><input type="number" inputmode="decimal" step="0.5" data-k="kg" value="${sr.kg ?? ""}" class="${kgChg?"chg":""}" placeholder="kg">${tipo.kg_tipo==="lastre"?"+kg":"kg"}</label>` : `<span class="small mut">${tipo.por_lado ? "por lado" : ""}</span>`}
+      <label><input type="number" inputmode="numeric" data-k="${campoB[0]}" value="${sr[campoB[0]] ?? ""}" class="${bChg?"chg":""}" placeholder="${sr.plan && sr.plan[campoB[0]] != null ? esc(sr.plan[campoB[0]]) : ""}">${campoB[1]}</label>
+      <select data-k="rpe"><option value="">RPE</option>${["5","6","6.5","7","7.5","8","8.5","9","9.5","10"].map(v => `<option ${String(sr.rpe)===v?"selected":""}>${v}</option>`).join("")}</select>
+      <button class="ck" data-act="ck">✓</button></div>`;
+  }).join("") + `</div><div class="btns"><button data-act="add">+ serie</button>${x.series.length ? `<button data-act="del">− serie</button>` : ""}</div>`;
+  return h + `</div>`;
+}
+function finHTML(s, r){
+  const est = r.terminada ? (r.enviada ? `<div class="state ok">✓ Enviada</div>` : `<div class="state pend">Guardada en el móvil · se enviará al tener red</div>`) : "";
+  return `<div class="fin"><div class="r"><span>RPE de la sesión</span><select data-k="rpe_sesion"><option value="">—</option>${[1,2,3,4,5,6,7,8,9,10].map(v => `<option ${r.rpe_sesion==v?"selected":""}>${v}</option>`).join("")}</select></div>
+    <textarea data-k="nota" placeholder="Notas (molestias, sensaciones, cambios…)">${esc(r.nota || "")}</textarea>
+    <button class="btn pri" data-act="fin" style="margin-top:8px">${r.terminada ? "Guardar cambios y reenviar" : "Terminar sesión"}</button>${est}</div>`;
+}
+
+/* ---------- eventos ---------- */
+function ctx(el){
+  const card = el.closest("[data-sid]"); if (!card) return {};
+  const s = plan[fecha].sesiones.find(x => x.id === card.dataset.sid);
+  const r = regSesion(fecha, s);
+  const exEl = el.closest("[data-eid]");
+  const x = exEl ? r.ejercicios[exEl.dataset.eid] : null;
+  const rowEl = el.closest("[data-i]");
+  return {s, r, x, i: rowEl ? +rowEl.dataset.i : null};
+}
+document.getElementById("main").addEventListener("input", ev => {
+  const el = ev.target, k = el.dataset.k; if (!k) return;
+  const {r, x, i} = ctx(el);
+  const v = el.tagName === "TEXTAREA" ? el.value : el.value === "" ? null : +el.value;
+  if (!x){ r[k] = v; guardar(); return; }                 // nota / rpe de sesión
+  if (i == null){ x[k] = v; guardar(); return; }          // minutos de movilidad
+  const sr = x.series[i], antes = sr[k];
+  sr[k] = v;
+  // cambiar el kg de una serie arrastra a las siguientes que aún tenían el mismo valor y no están hechas
+  if (k === "kg") x.series.slice(i+1).forEach(o => { if (!o.hecha && o.kg === antes) o.kg = v; });
+  guardar();
+  if (k === "kg") x.series.slice(i+1).forEach((o, j) => { const inp = el.closest(".rows").children[i+1+j].querySelector('[data-k="kg"]'); if (inp && document.activeElement !== inp) inp.value = o.kg ?? ""; });
+  el.classList.toggle("chg", sr.plan && sr.plan[k] != null && k !== "rpe" && v !== numReps(sr.plan[k]));
+});
+document.getElementById("main").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-act]"); if (!b) return;
+  const {s, r, x, i} = ctx(b), a = b.dataset.act;
+  if (a === "ck"){ const o = i == null ? x : x.series[i]; o.hecha = !o.hecha; }
+  if (a === "add"){ const u = x.series[x.series.length-1] || {}; x.series.push({n:x.series.length+1, kg:u.kg ?? null, reps:u.reps ?? null, duracion_s:u.duracion_s ?? null, distancia_m:u.distancia_m ?? null, rpe:null, hecha:false, plan:null}); }
+  if (a === "del") x.series.pop();
+  if (a === "fin"){
+    r.terminada = true; r.enviada = false; r.terminada_en = new Date().toISOString();
+    if (!cola.includes(fecha)) cola.push(fecha);
+    LS.set("cola", cola); guardar(); vaciarCola();
+  }
+  guardar(); render();
+});
+document.getElementById("week").addEventListener("click", ev => { const b = ev.target.closest("[data-f]"); if (b){ fecha = b.dataset.f; abrirDia(); } });
+document.getElementById("prev").onclick = () => { fecha = addD(fecha, -1); abrirDia(); };
+document.getElementById("next").onclick = () => { fecha = addD(fecha, 1); abrirDia(); };
+document.getElementById("bSync").onclick = sincronizar;
+function abrirDia(){ render(); window.scrollTo(0,0); if (cfg.token && navigator.onLine) bajarRegistro(fecha).then(() => render()).catch(()=>{}); }
+
+/* ---------- ajustes ---------- */
+const dlg = document.getElementById("cfg");
+function abrirCfg(){ document.getElementById("cTok").value = cfg.token; document.getElementById("cRepo").value = cfg.repo; document.getElementById("cMsg").textContent = ""; dlg.showModal(); }
+document.getElementById("bCfg").onclick = abrirCfg;
+document.getElementById("cClose").onclick = () => dlg.close();
+document.getElementById("cTest").onclick = async () => {
+  cfg.token = document.getElementById("cTok").value.trim(); cfg.repo = document.getElementById("cRepo").value.trim();
+  const msg = document.getElementById("cMsg"); msg.className = "state"; msg.textContent = "Probando…";
+  try{ await gh("plan/indice.json", {raw:true}); LS.set("cfg", cfg); msg.className = "state ok"; msg.textContent = "Conectado. Descargando el plan…"; await sincronizar(); dlg.close(); }
+  catch(e){ msg.className = "state pend"; msg.textContent = "No se pudo leer el repositorio (" + e.message + "). Revisa el token y el nombre."; }
+};
+
+/* ---------- arranque ---------- */
+window.addEventListener("online", vaciarCola);
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+render(); pintaSync();
+if (cfg.token) sincronizar();
+</script>
+</body>
+</html>
