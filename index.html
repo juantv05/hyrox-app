@@ -114,10 +114,10 @@ textarea{min-height:60px;resize:vertical}
 .list{margin:4px 0 0;padding-left:18px;font-size:14px}.list li{margin:2px 0}
 .empty{background:var(--surface);border:1px dashed var(--line);padding:24px;color:var(--muted);text-align:center}
 /* perfil */
-.cover{position:relative;margin:-12px calc(-1*max(14px,env(safe-area-inset-left))) 0;height:calc(100svh - 52px - var(--navh) - env(safe-area-inset-bottom));min-height:420px;background:radial-gradient(ellipse at 50% 40%,#2a3322 0%,#141714 72%);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.cover{position:relative;margin:-12px calc(-1*max(14px,env(safe-area-inset-left))) 0;height:calc(100svh - 52px - var(--navh) - env(safe-area-inset-bottom));min-height:420px;background:radial-gradient(ellipse at 50% 40%,#2a3322 0%,#141714 72%);display:flex;align-items:center;justify-content:center;overflow-x:clip;overflow-y:visible;z-index:0}
 .cover img{height:88%;max-width:92%;object-fit:contain;filter:drop-shadow(0 0 24px rgba(169,185,140,.25))}
-.cover .cn{position:absolute;left:16px;top:12px;font-family:var(--display);font-weight:800;font-size:40px;text-transform:uppercase;color:#e9ece6;line-height:.9}
-.cover .cn small{display:block;font-family:var(--mono);font-size:11px;font-weight:400;color:#f2c200;letter-spacing:.08em;margin-top:6px}
+.cover .cn{z-index:0;position:absolute;left:16px;right:16px;top:14px;font-family:var(--display);font-weight:800;font-size:clamp(72px,24vw,130px);text-transform:uppercase;color:#e9ece6;line-height:.85;letter-spacing:-.01em;text-shadow:0 4px 30px rgba(0,0,0,.6);will-change:transform,opacity;pointer-events:none}
+.cover .cn small{display:block;font-family:var(--mono);font-size:13px;font-weight:500;color:#f2c200;letter-spacing:.1em;margin-top:10px;text-shadow:none}
 .cover .down{position:absolute;bottom:10px;left:0;right:0;text-align:center;font-family:var(--mono);font-size:11px;color:#a9b98c;animation:bob 1.8s ease-in-out infinite}
 @keyframes bob{50%{transform:translateY(4px)}}
 .cover.vacia img{display:none}
@@ -132,6 +132,78 @@ details.adj p{margin:4px 0;white-space:pre-wrap}
 .hs{border-top:1px solid var(--line);padding:6px 0}.hs>summary{color:var(--ink)!important;font-size:13px!important}
 .hs ul{margin:4px 0 2px;padding-left:18px;font-size:13px}
 .info{background:none;border:1px solid var(--line);color:var(--muted);font-family:var(--mono);font-size:11px;padding:0 6px;margin-left:6px;cursor:pointer;vertical-align:middle}
+.pinfo{position:relative;z-index:1;background:var(--bg);display:grid;grid-template-columns:minmax(0,1fr);gap:12px;padding-top:12px;margin-top:-12px;box-shadow:0 -30px 30px var(--bg)}
+.kv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid var(--line);background:var(--surface)}
+.kv div{padding:10px 12px;border-right:1px solid var(--line)}.kv div:last-child{border-right:0}
+.kv span{display:block;font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.kv b{font-family:var(--display);font-size:24px;font-weight:700}
+.tbl{background:var(--surface);border:1px solid var(--line)}
+.tbl table{border-collapse:collapse;width:100%;font-size:13.5px;table-layout:fixed}
+.tbl td,.tbl th{overflow-wrap:anywhere}
+.tbl th,.tbl td{border-bottom:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+.tbl tr:last-child td{border-bottom:0}
+.tbl th{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;color:var(--muted);font-weight:500;letter-spacing:.04em;background:var(--soft)}
+.tbl td.num{font-family:var(--mono)}
+.goal{display:grid;gap:4px;padding:8px 0;border-bottom:1px solid var(--line)}.goal:last-child{border-bottom:0}
+.goal .gh{display:flex;justify-content:space-between;align-items:baseline;gap:14px;font-weight:600}
+.goal .gh span{font-family:var(--mono);font-size:12.5px;font-weight:400;color:var(--muted)}
+.bar{height:8px;background:var(--soft);position:relative}.bar i{position:absolute;inset:0 auto 0 0;background:var(--olive)}
+.md h4{font-family:var(--display);font-weight:700;font-size:17px;text-transform:uppercase;letter-spacing:.03em;margin:10px 0 4px;color:var(--olive)}
+.md ul{margin:4px 0;padding-left:18px;display:grid;gap:5px}.md p{margin:6px 0}
+/* progreso */
+.chart{width:100%;height:auto;display:block}
+.chart text{font-family:var(--mono);font-size:10px;fill:var(--muted)}
+.chart .ln{fill:none;stroke:var(--olive);stroke-width:2}
+.chart .pt{fill:var(--accent);stroke:var(--ink);stroke-width:1}
+.chart .gr{stroke:var(--line);stroke-width:1}
+.chart .br{fill:var(--olive)}
+/* temporada */
+.tsec{display:grid;gap:10px}
+.tsh{font-family:var(--display);font-weight:700;font-size:20px;text-transform:uppercase;letter-spacing:.02em;display:flex;align-items:center;gap:10px;margin-top:6px}
+.tsh span{font-family:var(--mono);font-size:11px;font-weight:500;background:var(--accent);color:var(--accent-ink);padding:2px 6px}
+.hitos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.hito{background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--olive);padding:10px;display:grid;gap:2px;min-width:0}
+.hito:last-child{border-top-color:var(--accent)}
+.hito .hn{font-family:var(--display);font-weight:700;font-size:16px;text-transform:uppercase;line-height:1.05}
+.hito .hd{font-family:var(--mono);font-size:12px;color:var(--muted)}.hito .hd b{font-family:var(--display);font-size:34px;font-weight:800;color:var(--ink);line-height:1}
+.hito .hf{font-size:12px}.hito .hs2{font-size:11.5px;color:var(--muted)}
+.blq{display:grid;gap:10px}.blq .bh{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+.blq .bn{font-family:var(--display);font-weight:700;font-size:22px;text-transform:uppercase;line-height:1.05}
+.semanas{display:grid;gap:8px}
+.sem{background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--line);padding:10px 12px;display:grid;gap:3px}
+.sem.cur{border-left-color:var(--accent);background:var(--soft)}
+.sem .sn2{font-family:var(--display);font-weight:700;font-size:18px;text-transform:uppercase}
+.sem em,.fase em{font-style:normal;font-family:var(--mono);font-size:10.5px;background:var(--accent);color:var(--accent-ink);padding:1px 6px;margin-left:6px;vertical-align:middle}
+.sem .sf{font-family:var(--mono);font-size:12px;color:var(--muted)}.sem .sfo{font-size:14px}
+.sem .sb{display:flex;gap:8px;align-items:center;margin-top:4px}
+.chip{font-family:var(--mono);font-size:12px;border:1px solid var(--olive);color:var(--olive);padding:1px 8px}
+.linea{display:grid;gap:0;border-left:2px solid var(--line);margin-left:6px}
+.fase{position:relative;padding:4px 0 16px 18px;display:grid;gap:3px}
+.fase::before{content:"";position:absolute;left:-7px;top:8px;width:12px;height:12px;border-radius:50%;background:var(--bg);border:2px solid var(--muted)}
+.fase.cur::before{background:var(--accent);border-color:var(--accent)}.fase.pas{opacity:.55}
+.fase .fd{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.fase .fn{font-family:var(--display);font-weight:700;font-size:19px;text-transform:uppercase;line-height:1.1}
+.fase .ffo{font-size:14px}.fase .pk{font-size:13px;color:var(--muted)}.fase .why{justify-self:start;margin-top:2px}
+/* control */
+.beta{font-family:var(--mono);font-size:12px;background:var(--accent);color:var(--accent-ink);padding:6px 10px}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fgrid label{display:grid;gap:3px;font-family:var(--mono);font-size:11px;text-transform:uppercase;color:var(--muted);letter-spacing:.04em}
+.fgrid .full{grid-column:1/-1}
+.seg{display:flex;flex-wrap:wrap;gap:6px}.seg button{flex:1 1 auto;background:var(--bg);border:1px solid var(--line);color:var(--ink);padding:8px 8px;font-family:var(--mono);font-size:12px;cursor:pointer}
+.esc{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:4px}.esc button{background:var(--bg);border:1px solid var(--line);color:var(--ink);padding:8px 0;font-family:var(--mono);font-size:13px;cursor:pointer}.esc button.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.seg button.on{background:var(--ink);color:var(--bg)}
+dialog{border:0;padding:16px;width:min(92vw,420px);background:var(--surface);color:var(--ink)}
+dialog input{margin:4px 0 10px}
+dialog.xp{padding:0;width:min(720px,calc(100vw - 24px));max-height:calc(100dvh - 32px);box-shadow:0 18px 60px rgba(0,0,0,.35)}
+dialog.xp::backdrop,dialog::backdrop{background:rgba(10,12,10,.55)}
+.xph{position:sticky;top:0;background:var(--ink);color:var(--bg);display:flex;align-items:center;gap:10px;padding:12px 16px}
+.xph h3{margin:0;font-family:var(--display);font-weight:800;font-size:22px;text-transform:uppercase;line-height:1.05}
+.xph small{display:block;font-family:var(--mono);font-size:11px;opacity:.75;text-transform:uppercase;letter-spacing:.05em}
+.xph button{margin-left:auto;background:var(--accent);color:var(--accent-ink);border:0;font-family:var(--mono);font-size:13px;padding:6px 12px;cursor:pointer}
+.xpb{padding:6px 18px 22px;font-size:14.5px;line-height:1.55}
+.xpb h4{font-family:var(--display);font-weight:700;font-size:17px;text-transform:uppercase;letter-spacing:.03em;margin:16px 0 4px;color:var(--olive)}
+.xpb h4.rev{color:var(--warn)}
+.xpb ul{margin:4px 0;padding-left:18px;display:grid;gap:6px}.xpb p{margin:6px 0}
 </style>
 </head>
 <body>
@@ -565,7 +637,7 @@ function cargaSemana(){
 function cargaHTML(){
   const c = cargaSemana(), filas = Object.keys(MUSCULOS).map(k => ({k, ...c[k]})).filter(x => x.series > 0).sort((a, b) => b.series - a.series);
   if (!filas.length) return `<div class="nt">Sin series registradas en la app en los últimos 7 días.</div>`;
-  return filas.map(x => `<div class="mus"><span>${esc(MUSCULOS[x.k])}</span><div class="bar"><i style="width:${Math.round(x.n*100)}%"></i></div><span>${num(Math.round(x.series*10)/10)}</span></div>`).join("") +
+  return filas.map(x => `<div class="mus"><span>${esc(MUSCULOS[x.k])} </span><div class="bar"><i style="width:${Math.round(x.n*100)}%"></i></div><span>${num(Math.round(x.series*10)/10)}</span></div>`).join("") +
     `<div class="nt" style="margin-top:6px">Series hechas por músculo en 7 días (un ejercicio cuenta entero para el principal y en parte para los secundarios).</div>`;
 }
 function pesoActual(){
@@ -581,22 +653,28 @@ function pintaPerfil(){
   const a = perfil.atleta, peso = pesoActual(), vo2 = a.vo2max && a.vo2max[a.vo2max.length-1];
   v.innerHTML = `
     <div class="cover" id="cover"><img src="portada.png" alt="" onerror="this.parentNode.classList.add('vacia')"><div class="cn">${esc(a.nombre)}<small>Hyrox Open · sub 1 h</small></div><div class="down">Desliza ↓</div></div>
-    <div class="kv"><div><span>Peso</span><b>${peso ? num(peso.kg) : "—"}</b> kg</div><div><span>Altura</span><b>${a.altura_cm}</b> cm</div><div><span>VO2máx</span><b>${vo2 ? vo2.v : "—"}</b></div></div>
+    <div class="pinfo"><div class="kv"><div><span>Peso</span> <b>${peso ? num(peso.kg) : "—"}</b> kg</div><div><span>Altura</span> <b>${a.altura_cm}</b> cm</div><div><span>VO2máx</span> <b>${vo2 ? vo2.v : "—"}</b></div></div>
     ${a.peso.length > 1 ? `<div class="card"><div class="mm">Peso</div>${lineChart(a.peso.map(p => ({x:p.fecha, y:p.kg})), {})}</div>` : `<div class="nt">Peso del ${fCorta(peso.fecha)}. La gráfica aparecerá con más pesajes.</div>`}
     <h3 class="st">Carga de la semana</h3><div class="card">${cargaHTML()}</div>
     <h3 class="st">Objetivos</h3>
     <div class="card">${perfil.objetivos.map(o => {
       const pr = typeof o.actual === "number" && typeof o.meta === "number" ? Math.min(1, o.actual / o.meta) : null;
-      return `<div class="goal"><div class="gh">${esc(o.nombre)}<span>${o.actual != null ? esc(o.unidad === "+kg" ? "+" + o.actual : o.actual) : "—"} / ${esc(o.unidad === "+kg" ? "+" + o.meta : o.meta)} ${esc(o.unidad === "+kg" ? "kg" : o.unidad)}</span></div>
+      return `<div class="goal"><div class="gh">${esc(o.nombre)} <span>${o.actual != null ? esc(o.unidad === "+kg" ? "+" + o.actual : o.actual) : "—"} / ${esc(o.unidad === "+kg" ? "+" + o.meta : o.meta)} ${esc(o.unidad === "+kg" ? "kg" : o.unidad)}</span></div>
         ${pr != null ? `<div class="bar"><i style="width:${Math.round(pr*100)}%"></i></div>` : ""}${o.nota ? `<div class="nt">${esc(o.nota)}</div>` : ""}</div>`; }).join("")}</div>
     <h3 class="st">Marcas</h3>
     <div class="tbl"><table><tr><th>Fuerza</th><th>Marca</th><th>1RM est.</th></tr>${perfil.marcas.fuerza.map(m => `<tr><td>${esc(m.ejercicio)}</td><td class="num">${esc(m.marca)}${m.fecha ? ` <span class="nt">(${esc(m.fecha)})</span>` : ""}</td><td class="num">${esc(m.e1rm || "")}</td></tr>`).join("")}</table></div>
     <div class="tbl"><table><tr><th>Carrera</th><th>Marca</th></tr>${perfil.marcas.carrera.map(m => `<tr><td>${esc(m.prueba)}</td><td class="num">${esc(m.marca)}</td></tr>`).join("")}</table></div>
     <h3 class="st">Comentario del entrenador</h3>
-    <div class="card md"><div class="mm">${fCorta(perfil.comentario.fecha)}</div>${md(perfil.comentario.texto)}</div>`;
+    <div class="card md"><div class="mm">${fCorta(perfil.comentario.fecha)}</div>${md(perfil.comentario.texto)}</div></div>`;
 }
 // la portada se desvanece al deslizar
-window.addEventListener("scroll", () => { if (vista !== "perfil") return; const c = document.getElementById("cover"); if (c) c.style.opacity = Math.max(.15, 1 - window.scrollY / (c.offsetHeight * .8)); }, {passive:true});
+window.addEventListener("scroll", () => {
+  if (vista !== "perfil") return; const c = document.getElementById("cover"); if (!c) return;
+  const y = window.scrollY, h = c.offsetHeight, n = c.querySelector(".cn"), im = c.querySelector("img"), d = c.querySelector(".down");
+  // el nombre baja más despacio que la página (sigue a la vista) mientras se difumina
+  n.style.transform = `translateY(${Math.min(y, h)}px)`; n.style.opacity = Math.max(0, 1 - y / (h * .8));
+  if (im){ im.style.transform = `translateY(${Math.min(y * .5, h)}px)`; im.style.opacity = Math.max(.1, 1 - y / (h * .9)); } if (d) d.style.opacity = Math.max(0, 1 - y / 80);
+}, {passive:true});
 
 /* ================= PROGRESO ================= */
 function lineChart(pts, o={}){
@@ -658,16 +736,22 @@ function pintaTemporada(){
   const v = document.getElementById("v-temporada"), t = meta.temporada;
   if (!t){ v.innerHTML = `<div class="empty">Pulsa ⟳ para descargar la temporada.</div>`; return; }
   const hoy = hoyISO(), dias = f => Math.ceil((dt(f) - dt(hoy)) / 864e5);
-  const hitos = [["Maratón", "2027-02-21", "21 feb 2027"], ["Pruebas AGM", "2027-03-16", "16 y 22 mar 2027"], ["Hyrox", "2027-10-01", "oct–nov 2027"]];
-  const b = t.bloque_actual;
-  v.innerHTML = `<h1 class="vt">Temporada</h1><div class="nt">${esc(t.objetivo || "")}</div>
-    <div class="cd">${hitos.map(([n, f, txt], i) => `<div><span>${n}</span><b>${i === 2 ? "≈" : ""}${Math.max(0, dias(f))}</b><small>días · ${txt}</small></div>`).join("")}</div>
-    <h3 class="st">Bloque actual</h3>
-    <div class="card"><div class="ses" style="border:0;padding:0"><div class="sh"><span class="mm">${fCorta(b.inicio)} → ${fCorta(b.fin)}</span>${b.explicacion ? `<button class="why" data-x="b" style="margin-left:auto">Por qué</button>` : ""}</div><h2>${esc(b.nombre)}</h2></div></div>
-    <div class="tbl"><table><tr><th>Sem.</th><th>Fechas · foco</th><th>Km</th></tr>${(b.semanas || []).map((w, i) => `<tr><td class="num">${w.n}</td><td>${esc(w.fechas || "")}<div class="nt">${esc(w.foco || "")}</div>${w.explicacion ? `<button class="why" data-x="w${i}" style="margin-top:4px">Por qué</button>` : ""}</td><td class="num">${w.km_objetivo ?? ""}</td></tr>`).join("")}</table></div>
-    <h3 class="st">Fases</h3>
-    <div class="tbl">${(t.fases || []).map((f, i) => ({f, i})).filter(({f, i}) => verFases || visibleFase(t.fases, i, hoy)).map(({f, i}) => `<div class="ph ${f.inicio <= hoy && hoy <= f.fin ? "cur" : ""}"><div class="pd">${fCorta(f.inicio)}<br>${fCorta(f.fin)}</div><div class="pc"><div class="pn">${esc(f.nombre)}</div><div>${esc(f.foco || "")}</div>${f.claves ? `<div class="pk">${esc(Array.isArray(f.claves) ? f.claves.join(" · ") : f.claves)}</div>` : ""}${f.explicacion ? `<div><button class="why" data-x="f${i}">Por qué</button></div>` : ""}</div></div>`).join("")}</div>
-    <div class="btns"><button data-x="todas">${verFases ? "Ver solo la actual y la siguiente" : `Ver todas las fases (${(t.fases || []).length})`}</button></div>`;
+  const hitos = [["Maratón", "2027-02-21", "21 feb 2027", "Solo para acabarla"], ["Pruebas AGM", "2027-03-16", "16 y 22 mar 2027", "6 km · 1 km · flexiones"], ["Hyrox Open", "2027-10-01", "oct–nov 2027", "Menos de 1 h"]];
+  const b = t.bloque_actual, total = Math.max(1, (dt(b.fin) - dt(b.inicio)) / 864e5 + 1), hecho = Math.min(total, Math.max(0, (dt(hoy) - dt(b.inicio)) / 864e5 + 1));
+  const semHoy = plan[hoy] && plan[hoy].semana;
+  const fases = (t.fases || []).map((f, i) => ({f, i})).filter(({i}) => verFases || visibleFase(t.fases, i, hoy));
+  v.innerHTML = `<h1 class="vt">Temporada</h1>${t.objetivo ? `<div class="nt">${esc(t.objetivo)}</div>` : ""}
+    <section class="tsec"><div class="tsh"><span>01</span> Próximos hitos</div>
+      <div class="hitos">${hitos.map(([n, f, txt, sub], i) => `<div class="hito"><div class="hn">${n}</div><div class="hd"><b>${i === 2 ? "≈ " : ""}${Math.max(0, dias(f))}</b> días</div><div class="hf">${txt}</div><div class="hs2">${sub}</div></div>`).join("")}</div>
+      <div class="nt">El Hyrox aún no tiene fecha: cuento hasta el 1 de octubre.</div></section>
+    <section class="tsec"><div class="tsh"><span>02</span> Bloque actual</div>
+      <div class="card blq"><div class="bh"><div><div class="bn">${esc(b.nombre)}</div><div class="mm">${fCorta(b.inicio)} → ${fCorta(b.fin)} · ${hoy < b.inicio ? `empieza en ${dias(b.inicio)} días` : `día ${Math.round(hecho)} de ${Math.round(total)}`}</div></div>${b.explicacion ? `<button class="why" data-x="b">Por qué</button>` : ""}</div>
+        <div class="bar"><i style="width:${Math.round(hecho/total*100)}%"></i></div></div>
+      <div class="semanas">${(b.semanas || []).map((w, i) => `<div class="sem ${w.n === semHoy ? "cur" : ""}"><div class="sn2">Semana ${w.n}${w.n === semHoy ? ` <em>Esta semana</em>` : ""}</div><div class="sf">${esc(w.fechas || "")}</div><div class="sfo">${esc(w.foco || "")}</div><div class="sb">${w.km_objetivo != null ? `<span class="chip">${w.km_objetivo} km</span>` : ""}${w.explicacion ? `<button class="why" data-x="w${i}">Por qué</button>` : ""}</div></div>`).join("")}</div></section>
+    <section class="tsec"><div class="tsh"><span>03</span> Fases de la temporada</div>
+      <div class="linea">${fases.map(({f, i}) => { const cur = f.inicio <= hoy && hoy <= f.fin, pas = f.fin < hoy;
+        return `<div class="fase ${cur ? "cur" : ""} ${pas ? "pas" : ""}"><div class="fd">${fCorta(f.inicio)} → ${fCorta(f.fin)}${cur ? ` <em>Ahora</em>` : ""}</div><div class="fn">${esc(f.nombre)}</div>${f.foco ? `<div class="ffo">${esc(f.foco)}</div>` : ""}${f.claves ? `<div class="pk">${esc(Array.isArray(f.claves) ? f.claves.join(" · ") : f.claves)}</div>` : ""}${f.explicacion ? `<button class="why" data-x="f${i}">Por qué</button>` : ""}</div>`; }).join("")}</div>
+      <div class="btns"><button data-x="todas">${verFases ? "Ver solo la actual y la siguiente" : `Ver todas las fases (${(t.fases || []).length})`}</button></div></section>`;
   v.onclick = ev => { const x = ev.target.closest("[data-x]"); if (!x) return; const k = x.dataset.x;
     if (k === "todas"){ verFases = !verFases; pintaTemporada(); return; }
     if (k === "b") abrirXp(`${b.inicio} → ${b.fin}`, b.nombre, b.explicacion);
@@ -677,6 +761,8 @@ function pintaTemporada(){
 
 /* ================= CONTROL (beta, solo en el móvil) ================= */
 let ctrlFecha = hoyISO();
+// escala de botones con números enteros (desde 0 o desde 1 hasta 10); tocar el marcado lo borra
+const esc10 = (g, k, val, desde) => `<div class="esc" style="--n:${11 - desde}">${Array.from({length:11 - desde}, (_, i) => i + desde).map(n => `<button type="button" class="${val === n ? "on" : ""}" data-esc="${g}:${k}" data-v="${n}">${n}</button>`).join("")}</div>`;
 function pintaControl(){
   const v = document.getElementById("v-control"), d = ctrl.diario[ctrlFecha] || {};
   const dom = addD(ctrlFecha, (7 - dt(ctrlFecha).getDay()) % 7), w = ctrl.semanal[dom] || {};
@@ -691,15 +777,16 @@ function pintaControl(){
       <label class="full">VFC (estado Garmin)${seg("hrv_estado", ["Equilibrada","Desequilibrada","Baja","Sin dato"], d.hrv_estado)}</label>
       <label>VFC (ms)<input type="number" inputmode="numeric" data-c="hrv_ms" value="${d.hrv_ms ?? ""}"></label>
       <label>FC reposo<input type="number" inputmode="numeric" data-c="fc_reposo" value="${d.fc_reposo ?? ""}"></label>
-      <label>Dolor peroné (0-10)<input type="number" inputmode="numeric" min="0" max="10" data-c="dolor_peroneo" value="${d.dolor_peroneo ?? ""}"></label>
-      <label>Dolor rodilla (0-10)<input type="number" inputmode="numeric" min="0" max="10" data-c="dolor_rodilla" value="${d.dolor_rodilla ?? ""}"></label>
-      <label>RPE del día<input type="text" inputmode="decimal" data-c="rpe" value="${d.rpe != null ? num(d.rpe) : ""}"></label>
+      <label class="full">Dolor peroné (0 = nada)${esc10("diario", "dolor_peroneo", d.dolor_peroneo, 0)}</label>
+      <label class="full">Dolor rodilla (0 = nada)${esc10("diario", "dolor_rodilla", d.dolor_rodilla, 0)}</label>
+      <label class="full">RPE del día${esc10("diario", "rpe", d.rpe, 1)}</label>
       <label class="full">Notas<textarea data-c="notas">${esc(d.notas || "")}</textarea></label></div></div>
     <div class="card"><div class="mm" style="margin-bottom:8px">Semanal · semana hasta el ${fCorta(dom)}</div><div class="fgrid" data-g="semanal">
       <label>Peso (kg)<input type="number" inputmode="decimal" step="0.1" data-c="peso" value="${w.peso ?? ""}"></label>
       <label>VO2máx<input type="number" inputmode="numeric" data-c="vo2max" value="${w.vo2max ?? ""}"></label>
-      <label>Sensación (1-10)<input type="number" inputmode="numeric" data-c="sensacion" value="${w.sensacion ?? ""}"></label>
+
       <label>VFC media (ms)<input type="number" inputmode="numeric" data-c="hrv_ms" value="${w.hrv_ms ?? ""}"></label>
+      <label class="full">Sensación de la semana (1-10)${esc10("semanal", "sensacion", w.sensacion, 1)}</label>
       <label class="full">Notas de la semana<textarea data-c="notas">${esc(w.notas || "")}</textarea></label></div></div>`;
   v.oninput = ev => { const el = ev.target, k = el.dataset.c; if (!k) return; const g = el.closest("[data-g]").dataset.g;
     const doc = g === "diario" ? (ctrl.diario[ctrlFecha] = ctrl.diario[ctrlFecha] || {fecha:ctrlFecha}) : (ctrl.semanal[dom] = ctrl.semanal[dom] || {semana_hasta:dom});
@@ -710,6 +797,10 @@ function pintaControl(){
     LS.set("ctrl", ctrl); };
   v.onclick = ev => {
     const c = ev.target.closest("[data-cd]"); if (c){ ctrlFecha = addD(ctrlFecha, +c.dataset.cd); pintaControl(); return; }
+    const e = ev.target.closest("[data-esc]");
+    if (e){ ev.preventDefault(); const [g, k] = e.dataset.esc.split(":"), val = +e.dataset.v;
+      const doc = g === "diario" ? (ctrl.diario[ctrlFecha] = ctrl.diario[ctrlFecha] || {fecha:ctrlFecha}) : (ctrl.semanal[dom] = ctrl.semanal[dom] || {semana_hasta:dom});
+      doc[k] = doc[k] === val ? null : val; LS.set("ctrl", ctrl); pintaControl(); return; }
     const b = ev.target.closest("[data-val]"); if (!b) return;
     const doc = ctrl.diario[ctrlFecha] = ctrl.diario[ctrlFecha] || {fecha:ctrlFecha};
     doc[b.closest("[data-seg]").dataset.seg] = b.dataset.val; LS.set("ctrl", ctrl); pintaControl(); };
