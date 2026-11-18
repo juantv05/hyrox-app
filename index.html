@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#141714">
 <title>Hyrox 2027</title>
 <link rel="manifest" href="manifest.webmanifest">
@@ -22,7 +22,9 @@
   --accent:#f2c200; --accent-ink:#141714; --olive:#a9b98c; --ok:#5fbf82; --warn:#e3995a; --bad:#ff6b5b;
   --t-agm:#a3a9b3; --t-fuerza:#e09a5f; --t-carrera:#6cc0dd; --t-aerobico:#6fcf93; --t-hyrox:#f2c200; --t-rec:#b8a7e0; --t-desc:#8b938d; --t-man:#a9b98c; color-scheme:dark}}
 *{box-sizing:border-box}
-html{scroll-padding-top:64px}
+html{scroll-padding-top:64px;overflow-x:hidden;-webkit-text-size-adjust:100%;touch-action:pan-x pan-y}
+html,body{width:100%;max-width:100vw;overscroll-behavior-x:none}
+body{overflow-x:hidden}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;padding-bottom:calc(var(--navh) + env(safe-area-inset-bottom) + 24px)}
 header{position:sticky;top:0;z-index:5;background:var(--ink);color:var(--bg);padding:8px max(14px,env(safe-area-inset-left));padding-top:max(8px,env(safe-area-inset-top));display:flex;align-items:center;gap:10px}
 .brand{font-family:var(--display);font-weight:800;font-size:20px;text-transform:uppercase;letter-spacing:.02em;flex:1}
