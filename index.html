@@ -745,6 +745,13 @@ function pintaProgreso(){
 }
 
 /* ================= TEMPORADA ================= */
+let verFases = false;
+// fase actual y la siguiente (si aún no ha empezado ninguna, las dos primeras)
+function visibleFase(fases, i, hoy){
+  let cur = fases.findIndex(f => f.inicio <= hoy && hoy <= f.fin);
+  if (cur < 0) cur = Math.max(0, fases.findIndex(f => f.inicio > hoy));
+  return i === cur || i === cur + 1;
+}
 function pintaTemporada(){
   const v = document.getElementById("v-temporada"), t = meta.temporada;
   if (!t){ v.innerHTML = `<div class="empty">Pulsa ⟳ para descargar la temporada.</div>`; return; }
@@ -757,8 +764,10 @@ function pintaTemporada(){
     <div class="card"><div class="ses" style="border:0;padding:0"><div class="sh"><span class="mm">${fCorta(b.inicio)} → ${fCorta(b.fin)}</span>${b.explicacion ? `<button class="why" data-x="b" style="margin-left:auto">Por qué</button>` : ""}</div><h2>${esc(b.nombre)}</h2></div></div>
     <div class="tbl"><table><tr><th>Sem.</th><th>Fechas · foco</th><th>Km</th></tr>${(b.semanas || []).map((w, i) => `<tr><td class="num">${w.n}</td><td>${esc(w.fechas || "")}<div class="nt">${esc(w.foco || "")}</div>${w.explicacion ? `<button class="why" data-x="w${i}" style="margin-top:4px">Por qué</button>` : ""}</td><td class="num">${w.km_objetivo ?? ""}</td></tr>`).join("")}</table></div>
     <h3 class="st">Fases</h3>
-    <div class="tbl">${(t.fases || []).map((f, i) => `<div class="ph ${f.inicio <= hoy && hoy <= f.fin ? "cur" : ""}"><div class="pd">${fCorta(f.inicio)}<br>${fCorta(f.fin)}</div><div class="pc"><div class="pn">${esc(f.nombre)}</div><div>${esc(f.foco || "")}</div>${f.claves ? `<div class="pk">${esc(Array.isArray(f.claves) ? f.claves.join(" · ") : f.claves)}</div>` : ""}${f.explicacion ? `<div><button class="why" data-x="f${i}">Por qué</button></div>` : ""}</div></div>`).join("")}</div>`;
+    <div class="tbl">${(t.fases || []).map((f, i) => ({f, i})).filter(({f, i}) => verFases || visibleFase(t.fases, i, hoy)).map(({f, i}) => `<div class="ph ${f.inicio <= hoy && hoy <= f.fin ? "cur" : ""}"><div class="pd">${fCorta(f.inicio)}<br>${fCorta(f.fin)}</div><div class="pc"><div class="pn">${esc(f.nombre)}</div><div>${esc(f.foco || "")}</div>${f.claves ? `<div class="pk">${esc(Array.isArray(f.claves) ? f.claves.join(" · ") : f.claves)}</div>` : ""}${f.explicacion ? `<div><button class="why" data-x="f${i}">Por qué</button></div>` : ""}</div></div>`).join("")}</div>
+    <div class="btns"><button data-x="todas">${verFases ? "Ver solo la actual y la siguiente" : `Ver todas las fases (${(t.fases || []).length})`}</button></div>`;
   v.onclick = ev => { const x = ev.target.closest("[data-x]"); if (!x) return; const k = x.dataset.x;
+    if (k === "todas"){ verFases = !verFases; pintaTemporada(); return; }
     if (k === "b") abrirXp(`${b.inicio} → ${b.fin}`, b.nombre, b.explicacion);
     else if (k[0] === "w"){ const w = b.semanas[+k.slice(1)]; abrirXp(`Semana ${w.n} · ${w.fechas || ""}`, w.foco || `Semana ${w.n}`, w.explicacion); }
     else { const f = t.fases[+k.slice(1)]; abrirXp(`${f.inicio} → ${f.fin}`, f.nombre, f.explicacion); } };
