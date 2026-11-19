@@ -217,11 +217,24 @@ dialog.xp::backdrop,dialog::backdrop{background:rgba(10,12,10,.55)}
 .xpb h4{font-family:var(--display);font-weight:700;font-size:17px;text-transform:uppercase;letter-spacing:.03em;margin:16px 0 4px;color:var(--olive)}
 .xpb h4.rev{color:var(--warn)}
 .xpb ul{margin:4px 0;padding-left:18px;display:grid;gap:6px}.xpb p{margin:6px 0}
+/* biblioteca y edición de sesiones */
+.ex.quit .nm s{color:var(--muted)}.ex.quit .pl{color:var(--warn)}
+.ed{margin:4px 0 6px}.ed button{font-size:11.5px;color:var(--muted)}
+.addex{margin-top:10px;border-top:1px solid var(--line);padding-top:10px}.addex button{border-style:dashed}
+.subst{font-family:var(--mono);font-size:11.5px;color:var(--warn);margin:2px 0 4px}
+#bq{margin:12px 0 2px}
+.blist{display:grid}
+.bi{display:flex;align-items:center;gap:8px;border-top:1px solid var(--line)}
+.bi .bn{flex:1;min-width:0;text-align:left;background:none;border:0;color:var(--ink);font:inherit;font-size:15px;padding:10px 2px;cursor:pointer}
+.bi .bn small{display:block;font-family:var(--mono);font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.bi .bc{background:none;border:1px solid var(--line);color:var(--muted);font-family:var(--mono);font-size:11px;padding:2px 8px;cursor:pointer}
+.bback{font-family:var(--mono);font-size:12px;background:none;border:1px solid var(--line);color:var(--ink);padding:4px 10px;margin:12px 0 0;cursor:pointer}
+.otro{margin-top:16px}.otro .r2{display:flex;gap:6px}.otro button{font-family:var(--mono);font-size:12px;background:var(--ink);color:var(--bg);border:0;padding:0 14px;cursor:pointer}
 </style>
 </head>
 <body>
 <header><div class="brand"><span>HX</span><b id="vtitle">Entreno</b></div><button id="bMenu" aria-label="Menú"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></header>
-<div class="menu" id="menu"><div class="pan"><h3>Menú</h3><button id="bSync">⟳&nbsp; Actualizar datos</button><button id="bCfg">⚙&nbsp; Ajustes</button><div class="st2">Estado: <span id="sync">—</span></div></div></div>
+<div class="menu" id="menu"><div class="pan"><h3>Menú</h3><button id="bBib">▤&nbsp; Biblioteca de ejercicios</button><button id="bSync">⟳&nbsp; Actualizar datos</button><button id="bCfg">⚙&nbsp; Ajustes</button><div class="st2">Estado: <span id="sync">—</span></div></div></div>
 
 <section class="view" id="v-entreno">
  <div class="nav"><button id="prev">◀</button><div class="d" id="dTitle"></div><button id="next">▶</button></div>
@@ -437,16 +450,32 @@ function sesionesTerminadas(){
 }
 function ultimaVez(nombre){
   const ses = sesionesTerminadas().filter(x => x.f < fecha).reverse();
-  for (const {f, s} of ses) for (const x of Object.values(s.ejercicios || {})){
+  for (const {f, s} of ses) for (const x of ejHechos(s)){
     if (x.nombre !== nombre || !x.series) continue;
     const hechas = x.series.filter(o => o.hecha);
     if (hechas.length) return {f, series:hechas};
   }
   return null;
 }
-function txtUltima(u, e){
-  const tipo = (e.series && e.series[0]) || {}, s = u.series;
-  const campo = tipo.duracion_s != null ? "duracion_s" : tipo.reps == null && tipo.distancia_m != null ? "distancia_m" : "reps";
+// cómo se registra un ejercicio: campo principal (reps / duracion_s / distancia_m) y tipo de carga.
+// Si lo has cambiado o añadido tú, manda lo que guardó la app al elegirlo de la biblioteca.
+function tipoEj(e, x){
+  if (x && (x.sustituye || x.extra) && x.campo) return {kg_tipo:x.kg_tipo, por_lado:false, campo:x.campo};
+  const t = (e.series && e.series[0]) || {};
+  return {kg_tipo:t.kg_tipo, por_lado:t.por_lado, campo:t.duracion_s != null ? "duracion_s" : t.distancia_m != null && t.reps == null ? "distancia_m" : "reps"};
+}
+// ejercicios que cuentan para progreso, carga y «última vez» (los quitados no)
+const ejHechos = s => Object.values(s.ejercicios || {}).filter(x => !x.quitado);
+const pendienteEj = x => x && !x.quitado && !hechoEj(x);
+// ejercicios de la sesión: los del plan + los que has añadido tú
+function listaEj(s, r){
+  if (!r) return s.ejercicios;
+  const extra = Object.entries(r.ejercicios).filter(([, x]) => x.extra).sort((a, b) => (a[1].orden || 0) - (b[1].orden || 0))
+    .map(([id, x]) => ({id, nombre:x.nombre, modo:x.modo === "continuo" ? "continuo" : "fuerza", categoria:x.modo === "continuo" ? "complemento" : "principal", series:[]}));
+  return s.ejercicios.concat(extra);
+}
+function txtUltima(u, tipo){
+  const s = u.series, campo = tipo.campo;
   const suf = campo === "duracion_s" ? '"' : campo === "distancia_m" ? " m" : "";
   const iguales = s.every(o => o.kg === s[0].kg && o[campo] === s[0][campo]);
   let t = iguales ? `${s.length}×${s[0][campo] ?? "?"}${suf}${s[0].kg != null ? " @ " + kgTxt(num(s[0].kg), tipo.kg_tipo) : ""}`
@@ -520,10 +549,11 @@ function sesionHTML(p, s, ajuste){
   h += adj;
   if (s.nota) h += `<div class="nt">${esc(s.nota)}</div>`;
   if (r && abierto[s.id] === undefined){
-    const primero = s.ejercicios.find(e => registrable(e) && !hechoEj(r.ejercicios[e.id]));
+    const primero = listaEj(s, r).find(e => registrable(e) && pendienteEj(r.ejercicios[e.id]));
     abierto[s.id] = primero ? primero.id : null;
   }
-  for (const e of s.ejercicios) h += ejercicioHTML(s, e, r);
+  for (const e of listaEj(s, r)) h += ejercicioHTML(s, e, r);
+  if (r) h += `<div class="btns addex"><button data-act="nuevo">+ Añadir ejercicio</button></div>`;
   const resto = [...(s.condiciones||[]).map(c => `<div>⚠ <b>Si</b> ${esc(c.si)} → ${esc(c.entonces)}</div>`), ...(s.progresion||[]).map(c => `<div>↗ <b>Si</b> ${esc(c.si)} → ${esc(c.entonces)}</div>`)];
   if (resto.length) h += `<div class="cond">${resto.join("")}</div>`;
   if (r) h += finHTML(r); else h += hechaBtn(s);
@@ -541,30 +571,38 @@ function ejercicioHTML(s, e, r){
     if (e.nota) h += `<div class="nt">${esc(e.nota)}</div>`;
     return h + `</div>`;
   }
-  const x = r.ejercicios[e.id], abre = abierto[s.id] === e.id, hecho = hechoEj(x);
+  const x = r.ejercicios[e.id];
+  if (!x) return "";
+  if (x.quitado) return `<div class="ex quit" data-eid="${e.id}"><div class="exh"><span class="nm"><s>${esc(x.nombre)}</s></span><span class="pl">quitado</span></div><div class="btns ed"><button data-act="rest">↺ Deshacer</button></div></div>`;
+  const abre = abierto[s.id] === e.id, hecho = hechoEj(x), cambiado = !!x.sustituye, propio = cambiado || !!x.extra;
+  const mov = esMovilidad(e), tipo = tipoEj(e, x), resumen = x.extra ? "" : (mov ? resumenContinuo(e) : resumenSeries(e));
   const prog = x.series ? `${x.series.filter(o => o.hecha).length}/${x.series.length}` : (x.hecha ? "✓" : "");
-  let h = `<div class="ex" data-eid="${e.id}"><button class="exh" data-act="abre"><span class="nm">${hecho ? "✓ " : ""}${esc(e.nombre)}${e.categoria === "opcional" ? " (opcional)" : ""}${infoBtn(e)}</span><span class="pl ${hecho ? "ok" : ""}">${abre ? "▾" : esMovilidad(e) ? esc(resumenContinuo(e)) : esc(prog) + " · " + esc(resumenSeries(e))}</span></button>`;
+  let h = `<div class="ex" data-eid="${e.id}"><button class="exh" data-act="abre"><span class="nm">${hecho ? "✓ " : ""}${esc(x.nombre)}${e.categoria === "opcional" ? " (opcional)" : ""}${infoBtn(x)}</span><span class="pl ${hecho ? "ok" : ""}">${abre ? "▾" : mov ? esc(resumen || prog) : esc(prog) + (resumen && !cambiado ? " · " + esc(resumen) : "")}</span></button>`;
   if (!abre) return h + `</div>`;
-  if (esMovilidad(e)){
-    h += `<div class="pl2">${esc(resumenContinuo(e))}</div>${e.nota ? `<div class="nt">${esc(e.nota)}</div>` : ""}`;
-    return h + `<div class="row ${x.hecha?"done":""}" style="grid-template-columns:1fr 90px 42px"><span class="nt">Hecha</span><label><input type="number" inputmode="numeric" data-k="minutos" value="${x.minutos ?? ""}"> min</label><button class="ck" data-act="ck">✓</button></div></div>`;
+  const ed = `<div class="btns ed">${mov ? "" : `<button data-act="camb">⇄ Cambiar</button>`}${cambiado ? `<button data-act="orig">↺ Volver al del plan</button>` : ""}<button data-act="quit">✕ Quitar</button></div>`;
+  if (cambiado) h += `<div class="subst">En lugar de: ${esc(x.sustituye)}${resumen ? " · plan " + esc(resumen) : ""}</div>`;
+  else if (x.extra) h += `<div class="subst">Añadido por ti</div>`;
+  if (mov){
+    if (resumen) h += `<div class="pl2">${esc(resumen)}</div>`;
+    if (e.nota && !propio) h += `<div class="nt">${esc(e.nota)}</div>`;
+    return h + ed + `<div class="row ${x.hecha?"done":""}" style="grid-template-columns:1fr 90px 42px"><span class="nt">Hecha</span><label><input type="number" inputmode="numeric" data-k="minutos" value="${x.minutos ?? ""}"> min</label><button class="ck" data-act="ck">✓</button></div></div>`;
   }
-  h += `<div class="pl2">${esc(resumenSeries(e))}</div>`;
-  if (e.nota) h += `<div class="nt">${esc(e.nota)}</div>`;
-  const u = ultimaVez(e.nombre);
-  if (u) h += `<div class="last"><b>Última vez</b> ${esc(txtUltima(u, e))}</div>`;
-  h += reglasHTML(e);
-  const tipo = (e.series && e.series[0]) || {};
-  const campoB = tipo.duracion_s != null ? ["duracion_s","s"] : tipo.distancia_m != null && tipo.reps == null ? ["distancia_m","m"] : ["reps","reps"];
+  if (!propio){ h += `<div class="pl2">${esc(resumen)}</div>`; if (e.nota) h += `<div class="nt">${esc(e.nota)}</div>`; }
+  h += ed;
+  const u = ultimaVez(x.nombre);
+  if (u) h += `<div class="last"><b>Última vez</b> ${esc(txtUltima(u, tipo))}</div>`;
+  if (!propio) h += reglasHTML(e);
+  const campoB = [tipo.campo, tipo.campo === "duracion_s" ? "s" : tipo.campo === "distancia_m" ? "m" : "reps"];
   const conKg = tipo.kg_tipo !== "peso_corporal";
   h += `<div class="rows">` + x.series.map((sr, i) => {
-    const kgChg = sr.plan && sr.plan.kg != null && sr.kg !== sr.plan.kg;
-    const bChg = sr.plan && numReps(sr.plan[campoB[0]]) != null && sr[campoB[0]] !== numReps(sr.plan[campoB[0]]);
+    const kgChg = !propio && sr.plan && sr.plan.kg != null && sr.kg !== sr.plan.kg;
+    const bChg = !propio && sr.plan && numReps(sr.plan[campoB[0]]) != null && sr[campoB[0]] !== numReps(sr.plan[campoB[0]]);
     const rpeObj = sr.plan && sr.plan.rpe ? String(sr.plan.rpe) : "RPE";
-    return `<div class="row ${sr.hecha?"done":""} ${sr.plan?"":"extra"}" data-i="${i}">
+    const ph = !propio && sr.plan && sr.plan[campoB[0]] != null ? esc(sr.plan[campoB[0]]) : "";
+    return `<div class="row ${sr.hecha?"done":""} ${sr.plan && !propio?"":"extra"}" data-i="${i}">
       <span class="n">${sr.n}</span>
       ${conKg ? `<label><input type="number" inputmode="decimal" step="0.5" data-k="kg" value="${sr.kg ?? ""}" class="${kgChg?"chg":""}" placeholder="kg">${tipo.kg_tipo==="lastre"?"+kg":"kg"}</label>` : `<span class="nt">${tipo.por_lado ? "por lado" : ""}</span>`}
-      <label><input type="number" inputmode="numeric" data-k="${campoB[0]}" value="${sr[campoB[0]] ?? ""}" class="${bChg?"chg":""}" placeholder="${sr.plan && sr.plan[campoB[0]] != null ? esc(sr.plan[campoB[0]]) : ""}">${campoB[1]}</label>
+      <label><input type="number" inputmode="numeric" data-k="${campoB[0]}" value="${sr[campoB[0]] ?? ""}" class="${bChg?"chg":""}" placeholder="${ph}">${campoB[1]}</label>
       <input class="rpe" type="text" inputmode="decimal" data-k="rpe" value="${sr.rpe != null ? num(sr.rpe) : ""}" placeholder="${esc(rpeObj)}" aria-label="RPE">
       <button class="ck" data-act="ck">✓</button></div>`;
   }).join("") + `</div><div class="btns"><button data-act="add">+ serie</button>${x.series.length ? `<button data-act="del">− serie</button>` : ""}</div>`;
@@ -601,8 +639,8 @@ mainEl.addEventListener("input", ev => {
   sr[k] = v;
   if (k === "kg") x.series.slice(i+1).forEach(o => { if (!o.hecha && o.kg === antes) o.kg = v; });
   guardar();
-  if (k === "kg") x.series.slice(i+1).forEach((o, j) => { const inp = el.closest(".rows").children[i+1+j].querySelector('[data-k="kg"]'); if (inp && document.activeElement !== inp){ inp.value = o.kg ?? ""; inp.classList.toggle("chg", o.plan && o.plan.kg != null && o.kg !== o.plan.kg); } });
-  if (k !== "rpe") el.classList.toggle("chg", sr.plan && sr.plan[k] != null && v !== numReps(sr.plan[k]));
+  if (k === "kg") x.series.slice(i+1).forEach((o, j) => { const inp = el.closest(".rows").children[i+1+j].querySelector('[data-k="kg"]'); if (inp && document.activeElement !== inp){ inp.value = o.kg ?? ""; inp.classList.toggle("chg", !x.sustituye && !x.extra && o.plan && o.plan.kg != null && o.kg !== o.plan.kg); } });
+  if (k !== "rpe") el.classList.toggle("chg", !x.sustituye && !x.extra && sr.plan && sr.plan[k] != null && v !== numReps(sr.plan[k]));
 });
 mainEl.addEventListener("click", ev => {
   const w = ev.target.closest("[data-why]");
@@ -623,11 +661,16 @@ mainEl.addEventListener("click", ev => {
   const b = ev.target.closest("[data-act]"); if (!b) return;
   const {s, r, x, eid, i} = ctx(b), a = b.dataset.act;
   if (a === "abre"){ abierto[s.id] = abierto[s.id] === eid ? null : eid; irA = abierto[s.id]; render(); return; }
+  if (a === "camb"){ abrirBiblio({fecha, sid:s.id, eid}); return; }
+  if (a === "nuevo"){ abrirBiblio({fecha, sid:s.id, eid:null}); return; }
+  if (a === "quit"){ if (x.extra) delete r.ejercicios[eid]; else x.quitado = true; if (abierto[s.id] === eid) abierto[s.id] = null; }
+  if (a === "rest"){ delete x.quitado; abierto[s.id] = eid; }
+  if (a === "orig"){ delete r.ejercicios[eid]; regSesion(fecha, s); }
   if (a === "ck"){
     const o = i == null ? x : x.series[i]; o.hecha = !o.hecha;
     if (o.hecha && hechoEj(x)){
-      const orden = s.ejercicios.filter(registrable), pos = orden.findIndex(e => e.id === eid);
-      const sig = orden.slice(pos+1).concat(orden.slice(0, pos)).find(e => !hechoEj(r.ejercicios[e.id]));
+      const orden = listaEj(s, r).filter(registrable), pos = orden.findIndex(e => e.id === eid);
+      const sig = orden.slice(pos+1).concat(orden.slice(0, pos)).find(e => pendienteEj(r.ejercicios[e.id]));
       abierto[s.id] = sig ? sig.id : null; irA = sig ? sig.id : null;
     }
   }
@@ -649,6 +692,13 @@ const MUSCULOS = {trapecio:"Trapecio", pectoral:"Pectoral", deltoides:"Deltoides
   dorsal:"Dorsal", abdomen:"Abdomen", oblicuos:"Oblicuos", lumbar:"Lumbar", gluteo:"Glúteo", cuadriceps:"Cuádriceps", aductores:"Aductores",
   isquios:"Isquiotibiales", gemelo:"Gemelo", soleo:"Sóleo", tibial:"Tibial anterior", peroneos:"Peroneos"};
 const MAPA = [
+  ["curl femoral", {isquios:1}], ["hip thrust", {gluteo:1, isquios:.4}], ["puente de gluteo", {gluteo:1, isquios:.4}],
+  ["zancada", {cuadriceps:1, gluteo:.8, aductores:.3}], ["lunge", {cuadriceps:1, gluteo:.8, aductores:.3}], ["prensa", {cuadriceps:1, gluteo:.6}],
+  ["extension de cuadriceps", {cuadriceps:1}], ["extension de pierna", {cuadriceps:1}], ["hiperextension", {lumbar:1, gluteo:.6, isquios:.4}],
+  ["jalon", {dorsal:1, biceps:.6, trapecio:.3}], ["remo con barra", {dorsal:1, trapecio:.6, biceps:.4, lumbar:.3}], ["remo en polea", {dorsal:1, trapecio:.5, biceps:.4}],
+  ["remo sentado", {dorsal:1, trapecio:.5, biceps:.4}], ["face pull", {deltoides:.8, trapecio:.8}], ["press con mancuernas", {pectoral:1, triceps:.5, deltoides:.4}],
+  ["press plano", {pectoral:1, triceps:.5, deltoides:.4}], ["flexion", {pectoral:1, triceps:.6, deltoides:.4}], ["swing", {gluteo:1, isquios:.8, lumbar:.4}],
+  ["burpee", {cuadriceps:.6, pectoral:.4, gluteo:.4}],
   ["fondos", {pectoral:1, triceps:1, deltoides:.5}], ["dominadas", {dorsal:1, biceps:.8, antebrazo:.5, trapecio:.4}],
   ["sentadilla", {cuadriceps:1, gluteo:.8, aductores:.5, lumbar:.3}], ["peso muerto", {isquios:1, gluteo:1, lumbar:.7, antebrazo:.3}],
   ["press inclinado", {pectoral:1, deltoides:.6, triceps:.5}], ["press banca", {pectoral:1, triceps:.6, deltoides:.4}],
@@ -662,7 +712,7 @@ const MAPA = [
 function cargaSemana(){
   const desde = addD(hoyISO(), -6), c = {};
   sesionesTerminadas().filter(x => x.f >= desde && x.f <= hoyISO()).forEach(({f, s}) => {
-    Object.values(s.ejercicios || {}).forEach(x => {
+    ejHechos(s).forEach(x => {
       const nm = norm(x.nombre), m = MAPA.find(([k]) => nm.includes(k)); if (!m) return;
       const series = x.series ? x.series.filter(o => o.hecha).length : (x.hecha ? 1 : 0);
       Object.entries(m[1]).forEach(([mu, w]) => { c[mu] = (c[mu] || 0) + series * w; (c["_ej_" + mu] = c["_ej_" + mu] || new Set()).add(x.nombre); });
@@ -738,7 +788,7 @@ function pintaProgreso(){
   const masa = (meta.atleta && meta.atleta.masa_corporal_kg) || 77;
   // mejor 1RM estimado por día y ejercicio (Epley; en lastre se calcula sobre el total y se muestra como lastre)
   const porEj = {};
-  ses.forEach(({f, s}) => Object.values(s.ejercicios || {}).forEach(x => {
+  ses.forEach(({f, s}) => ejHechos(s).forEach(x => {
     if (!x.series) return;
     const lastre = /fondos|dominadas/.test(norm(x.nombre));
     x.series.filter(o => o.hecha && o.kg != null && o.reps).forEach(o => {
@@ -751,7 +801,7 @@ function pintaProgreso(){
   // series hechas por semana (últimas 8)
   const lunes = f => addD(f, -((dt(f).getDay()+6)%7));
   const sem = []; let l = lunes(hoyISO()); for (let i = 7; i >= 0; i--) sem.push(addD(l, -7*i));
-  const cuenta = {}; ses.forEach(({f, s}) => { const k = lunes(f); Object.values(s.ejercicios || {}).forEach(x => cuenta[k] = (cuenta[k] || 0) + (x.series ? x.series.filter(o => o.hecha).length : 0)); });
+  const cuenta = {}; ses.forEach(({f, s}) => { const k = lunes(f); ejHechos(s).forEach(x => cuenta[k] = (cuenta[k] || 0) + (x.series ? x.series.filter(o => o.hecha).length : 0)); });
   const rpeS = ses.filter(x => x.s.rpe_sesion != null).map(x => ({x:x.f, y:x.s.rpe_sesion}));
   v.innerHTML = `<h1 class="vt">Progreso</h1>
     ${!ses.length ? `<div class="empty">Aún no hay sesiones registradas en la app. Las gráficas se llenan solas con cada «Terminar sesión».</div>` : ""}
@@ -760,7 +810,7 @@ function pintaProgreso(){
     <div class="card"><div class="mm">Series hechas por semana (fuerza y movilidad)</div>${barChart(sem.map(s => ({x:fCorta(s).split(" ")[0] + "/" + (dt(s).getMonth()+1), y:cuenta[s] || 0})))}</div>
     <div class="card"><div class="mm">RPE de sesión</div>${rpeS.length ? lineChart(rpeS) : `<div class="nt">Sin datos todavía.</div>`}</div>
     <div class="nt">Los km semanales y los tests de carrera llegarán cuando la app lea también tus datos de Strava.</div>
-    ${ses.length ? `<details class="hist card"><summary>Historial · ${ses.length} sesiones</summary>${[...ses].reverse().map(({f, s}) => `<details class="hs"><summary>${fCorta(f)} · ${esc(s.titulo)}${s.rpe_sesion != null ? ` · RPE ${num(s.rpe_sesion)}` : ""}</summary><ul>${Object.values(s.ejercicios || {}).map(x => `<li>${esc(x.nombre)}: ${x.series ? (x.series.filter(o => o.hecha).map(o => `${o.kg != null ? num(o.kg) + "×" : ""}${o.reps ?? (o.duracion_s ? o.duracion_s + '"' : o.distancia_m ? o.distancia_m + " m" : "?")}${o.rpe != null ? " @" + num(o.rpe) : ""}`).join(", ") || "sin series hechas") : (x.hecha ? "hecha" + (x.minutos ? ` (${x.minutos}')` : "") : "no hecha")}</li>`).join("")}</ul>${s.nota ? `<div class="nt">${esc(s.nota)}</div>` : ""}</details>`).join("")}</details>` : ""}`;
+    ${ses.length ? `<details class="hist card"><summary>Historial · ${ses.length} sesiones</summary>${[...ses].reverse().map(({f, s}) => `<details class="hs"><summary>${fCorta(f)} · ${esc(s.titulo)}${s.rpe_sesion != null ? ` · RPE ${num(s.rpe_sesion)}` : ""}</summary><ul>${ejHechos(s).map(x => `<li>${esc(x.nombre)}${x.sustituye ? ` <span class="nt">(en vez de ${esc(x.sustituye)})</span>` : x.extra ? ` <span class="nt">(añadido)</span>` : ""}: ${x.series ? (x.series.filter(o => o.hecha).map(o => `${o.kg != null ? num(o.kg) + "×" : ""}${o.reps ?? (o.duracion_s ? o.duracion_s + '"' : o.distancia_m ? o.distancia_m + " m" : "?")}${o.rpe != null ? " @" + num(o.rpe) : ""}`).join(", ") || "sin series hechas") : (x.hecha ? "hecha" + (x.minutos ? ` (${x.minutos}')` : "") : "no hecha")}</li>`).join("")}</ul>${s.nota ? `<div class="nt">${esc(s.nota)}</div>` : ""}</details>`).join("")}</details>` : ""}`;
   const sel = document.getElementById("ejSel"); if (sel) sel.onchange = () => { ejSel = sel.value; LS.set("ejSel", ejSel); pintaProgreso(); };
 }
 
@@ -869,6 +919,74 @@ function abrirXp(sub, titulo, texto){
   if (xp.showModal){ if (!xp.open) xp.showModal(); } else xp.setAttribute("open", ""); xp.scrollTop = 0;
 }
 document.getElementById("xpc").onclick = () => xp.close();
+xp.addEventListener("close", () => { biblioPick = null; });
+
+/* ================= biblioteca de ejercicios ================= */
+const GRUPOS = ["Empuje", "Tracción", "Pierna", "Core", "Acarreos", "Pierna-pie y tendón", "Hyrox", "Movilidad", "Otros"];
+let biblioPick = null, biblioQ = "";   // biblioPick: {fecha, sid, eid} si estás eligiendo para una sesión
+const xpb = document.getElementById("xpb");
+function abrirBiblio(pick){
+  biblioPick = pick || null;
+  document.getElementById("xps").textContent = pick ? (pick.eid ? "Cambiar ejercicio" : "Añadir ejercicio") : `${biblio.length} fichas`;
+  document.getElementById("xpt").textContent = pick ? "Elige de la biblioteca" : "Biblioteca";
+  xpb.innerHTML = `<input id="bq" type="search" placeholder="Buscar ejercicio…" autocomplete="off" value="${esc(biblioQ)}"><div id="blist"></div>` +
+    (pick ? `<div class="otro"><div class="mm" style="margin-bottom:6px">¿No está en la lista?</div><div class="r2"><input id="botro" placeholder="Nombre del ejercicio"><button data-botro="1">Usar</button></div></div>` : "");
+  listaBiblio();
+  if (!xp.open) xp.showModal(); xp.scrollTop = 0;
+}
+function listaBiblio(){
+  const q = norm(biblioQ).trim();
+  let fs = biblio.filter(f => !q || norm(f.nombre).includes(q) || f.claves.some(k => k.includes(q)) || norm(f.grupo).includes(q));
+  if (biblioPick && biblioPick.eid) fs = fs.filter(f => f.modo !== "continuo");   // la movilidad no sustituye a un ejercicio de series
+  const h = GRUPOS.map(g => {
+    const xs = fs.filter(f => (GRUPOS.includes(f.grupo) ? f.grupo : "Otros") === g).sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
+    if (!xs.length) return "";
+    return `<h4>${esc(g)}</h4><div class="blist">${xs.map(f => `<div class="bi"><button class="bn" data-bf="${esc(f.id)}">${esc(f.nombre)}</button>${biblioPick ? `<button class="bc" data-bver="${esc(f.id)}">cómo</button>` : ""}</div>`).join("")}</div>`;
+  }).join("");
+  document.getElementById("blist").innerHTML = h || `<p class="nt">Nada con «${esc(biblioQ)}».${biblioPick ? " Escríbelo abajo." : ""}</p>`;
+}
+function verFicha(f){
+  document.getElementById("xps").textContent = f.grupo || "Cómo se hace"; document.getElementById("xpt").textContent = f.nombre;
+  xpb.innerHTML = `<button class="bback" data-bback="1">◀ ${biblioPick ? "Volver a elegir" : "Biblioteca"}</button>` +
+    md(`## Pasos\n${f.pasos.map(x => "- " + x).join("\n")}\n\n## Claves\n${f.claves_tecnicas.map(x => "- " + x).join("\n")}\n\n## Errores típicos\n${f.errores.map(x => "- " + x).join("\n")}`) +
+    (biblioPick ? `<div class="btns" style="margin-top:14px"><button data-bf="${esc(f.id)}">Elegir este ejercicio</button></div>` : "");
+  xp.scrollTop = 0;
+}
+// aplica lo elegido: cambia el ejercicio (guarda cuál era el del plan) o añade uno nuevo con 3 series vacías
+function aplicaElegido(nombre, f){
+  const pick = biblioPick; xp.close();
+  if (!pick || pick.fecha !== fecha || !plan[fecha]) return;
+  const s = plan[fecha].sesiones.find(z => z.id === pick.sid); if (!s) return;
+  const r = regSesion(fecha, s);
+  const modo = f && f.modo ? f.modo : "fuerza", kg_tipo = f && f.kg_tipo ? f.kg_tipo : "kg";
+  const campo = modo === "isometrico" ? "duracion_s" : modo === "acarreo" ? "distancia_m" : "reps";
+  const vacia = n => ({n, kg:null, reps:null, duracion_s:null, distancia_m:null, rpe:null, hecha:false, plan:null});
+  if (pick.eid){
+    const x = r.ejercicios[pick.eid]; if (!x) return;
+        if (x.sustituye && norm(x.sustituye) === norm(nombre)){ delete r.ejercicios[pick.eid]; regSesion(fecha, s); }
+    else {
+      if (!x.extra && !x.sustituye) x.sustituye = x.nombre;
+      x.nombre = nombre; x.kg_tipo = kg_tipo; x.campo = campo; if (x.extra) x.modo = modo;
+      (x.series || []).forEach(o => { if (o.hecha) return; o.kg = null; o.reps = null; o.duracion_s = null; o.distancia_m = null; });   // las cargas del plan eran de otro ejercicio
+    }
+    abierto[s.id] = pick.eid; irA = pick.eid;
+  } else {
+    const id = `${s.id}-x${Date.now().toString(36)}`;
+    r.ejercicios[id] = modo === "continuo" ? {nombre, extra:true, modo, orden:Date.now(), hecha:false, minutos:null}
+      : {nombre, extra:true, modo, kg_tipo, campo, orden:Date.now(), series:[1,2,3].map(vacia)};
+    abierto[s.id] = id; irA = id;
+  }
+  guardar(); render();
+}
+xpb.addEventListener("input", ev => { if (ev.target.id === "bq"){ biblioQ = ev.target.value; listaBiblio(); } });
+xpb.addEventListener("click", ev => {
+  const g = sel => ev.target.closest(sel);
+  if (g("[data-bback]")){ abrirBiblio(biblioPick); return; }
+  const v = g("[data-bver]"); if (v){ verFicha(biblio.find(f => f.id === v.dataset.bver)); return; }
+  const b = g("[data-bf]");
+  if (b){ const f = biblio.find(z => z.id === b.dataset.bf); if (biblioPick) aplicaElegido(f.nombre, f); else verFicha(f); return; }
+  if (g("[data-botro]")){ const n = document.getElementById("botro").value.trim(); if (n) aplicaElegido(n, fichaDe(n)); }
+});
 const dlg = document.getElementById("cfg");
 function abrirCfg(){ document.getElementById("cTok").value = cfg.token; document.getElementById("cRepo").value = cfg.repo; document.getElementById("cMsg").textContent = ""; dlg.showModal(); }
 document.getElementById("bCfg").onclick = () => { menu.classList.remove("on"); abrirCfg(); };
@@ -876,6 +994,7 @@ const menu = document.getElementById("menu");
 document.getElementById("bMenu").onclick = () => menu.classList.add("on");
 menu.onclick = ev => { if (ev.target === menu) menu.classList.remove("on"); };
 document.getElementById("bSync").onclick = () => { menu.classList.remove("on"); sincronizar(); };
+document.getElementById("bBib").onclick = () => { menu.classList.remove("on"); biblioQ = ""; abrirBiblio(null); };
 document.getElementById("cClose").onclick = () => dlg.close();
 document.getElementById("cTest").onclick = async () => {
   cfg.token = document.getElementById("cTok").value.trim(); cfg.repo = document.getElementById("cRepo").value.trim();
