@@ -217,6 +217,13 @@ dialog.xp::backdrop,dialog::backdrop{background:rgba(10,12,10,.55)}
 .xpb h4{font-family:var(--display);font-weight:700;font-size:17px;text-transform:uppercase;letter-spacing:.03em;margin:16px 0 4px;color:var(--olive)}
 .xpb h4.rev{color:var(--warn)}
 .xpb ul{margin:4px 0;padding-left:18px;display:grid;gap:6px}.xpb p{margin:6px 0}
+/* garmin */
+.gg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 14px}
+.gg span,.gauto span{display:block;font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.gg b{font-family:var(--display);font-size:24px;font-weight:800;line-height:1.1}.gg small,.gauto small{display:block;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.gg .hv{font-style:normal;font-weight:600}.hv.ok{color:var(--ok)}.hv.mid{color:var(--warn)}.hv.bad{color:var(--bad)}
+.gauto b{font-family:var(--display);font-size:22px;font-weight:800}
+.gacts{font-size:13.5px}
 /* biblioteca y edición de sesiones */
 .ex.quit .nm s{color:var(--muted)}.ex.quit .pl{color:var(--warn)}
 .ed{margin:4px 0 6px}.ed button{font-size:11.5px;color:var(--muted)}
@@ -281,6 +288,7 @@ let regs = LS.get("regs", {});          // fecha -> registro propio
 let hist = LS.get("hist", {});          // fecha -> registro bajado de GitHub
 let cola = LS.get("cola", []);
 let ctrl = LS.get("ctrl", {diario:{}, semanal:{}});   // control (beta, solo en el móvil)
+let garmin = LS.get("garmin", {}), gsha = LS.get("gsha", {});   // garmin/AAAA-MM-DD.json (lo escribe GitHub Actions)
 const hoyISO = () => { const d = new Date(); return new Date(d - d.getTimezoneOffset()*6e4).toISOString().slice(0,10); };
 let fecha = hoyISO();
 let vista = LS.get("vista", "entreno");
@@ -355,11 +363,22 @@ async function bajarControl(){
   }
   LS.set("ctrl", ctrl);
 }
+// Garmin: solo baja los archivos que han cambiado (compara el sha) de los últimos 60 días
+async function bajarGarmin(){
+  const lista = await gh("garmin"); if (!Array.isArray(lista)) return;
+  const desde = addD(hoyISO(), -60);
+  await Promise.all(lista.filter(x => /^\d{4}-\d\d-\d\d\.json$/.test(x.name) && x.name.slice(0,10) >= desde && gsha[x.name] !== x.sha).map(async x => {
+    const t = await gh(`garmin/${x.name}`, {raw:true}); if (t){ garmin[x.name.slice(0,10)] = JSON.parse(t); gsha[x.name] = x.sha; } }));
+  Object.keys(garmin).forEach(d => { if (d < desde) delete garmin[d]; });
+  LS.set("garmin", garmin); LS.set("gsha", gsha);
+}
+// último valor de Garmin hasta una fecha (p. ej. VO2máx, que solo sale los días que lo mide)
+function ultimoG(campo, hasta){ const d = Object.keys(garmin).filter(f => f <= (hasta || "9") && garmin[f][campo] != null).sort().pop(); return d ? {f:d, v:garmin[d][campo]} : null; }
 async function sincronizar(){
   if (!cfg.token){ abrirCfg(); return; }
   if (!navigator.onLine){ pintaSync("Sin red"); return; }
   pintaSync("…");
-  try{ await vaciarCola(); await bajarPlan(); await Promise.all([bajarHistorial().catch(()=>{}), bajarControl().catch(()=>{})]); pintaSync(); pintar(); }
+  try{ await vaciarCola(); await bajarPlan(); await Promise.all([bajarHistorial().catch(()=>{}), bajarControl().catch(()=>{}), bajarGarmin().catch(()=>{})]); pintaSync(); pintar(); }
   catch(e){ console.error("sync", e && e.message); pintaSync("Error"); }
 }
 function pintaSync(txt){
@@ -740,7 +759,7 @@ function pesoActual(){
 function pintaPerfil(){
   const v = document.getElementById("v-perfil");
   if (!perfil){ v.innerHTML = `<div class="empty">Pulsa ⟳ para descargar tu perfil.</div>`; return; }
-  const a = perfil.atleta, peso = pesoActual(), vo2 = a.vo2max && a.vo2max[a.vo2max.length-1];
+  const a = perfil.atleta, peso = pesoActual(), vo2p = a.vo2max && a.vo2max[a.vo2max.length-1], vo2g = ultimoG("vo2max"), vo2 = vo2g && (!vo2p || vo2g.f >= (vo2p.fecha || "")) ? {v:num(vo2g.v)} : vo2p;
   v.innerHTML = `
     <div class="cover" id="cover"><img src="img/figura.webp" alt="" onerror="this.parentNode.classList.add('vacia')"><div class="cn">${esc(a.nombre)}<small>Hyrox Open · sub 1 h</small></div><div class="down">Desliza ↓</div></div>
     <div class="pinfo"><div class="kv"><div><span>Peso</span> <b>${peso ? num(peso.kg) : "—"}</b> kg</div><div><span>Altura</span> <b>${a.altura_cm}</b> cm</div><div><span>VO2máx</span> <b>${vo2 ? vo2.v : "—"}</b></div></div>
@@ -864,19 +883,40 @@ let ctrlFecha = hoyISO();
 const estCtrl = (g, d) => { const k = `control/${g}/${d}`; if (cola.includes(k)) return `<div class="state pend">Guardado en el móvil · se enviará al tener red</div>`; return (ctrl[g] || {})[d] && ctrl[g][d].updatedAt ? `<div class="state ok">✓ Enviado</div>` : ""; };
 // escala de botones con números enteros (desde 0 o desde 1 hasta 10); tocar el marcado lo borra
 const esc10 = (g, k, val, desde) => `<div class="esc" style="--n:${11 - desde}">${Array.from({length:11 - desde}, (_, i) => i + desde).map(n => `<button type="button" class="${val === n ? "on" : ""}" data-esc="${g}:${k}" data-v="${n}">${n}</button>`).join("")}</div>`;
+const hm = m => `${Math.floor(m/60)} h ${String(m%60).padStart(2,"0")}`;
+const ACT = {running:"Carrera", trail_running:"Trail", treadmill_running:"Cinta", indoor_cardio:"Cardio", strength_training:"Fuerza", indoor_rowing:"Remo", cycling:"Bici", walking:"Andar", hiking:"Marcha", hiit:"HIIT"};
+function garminHTML(g){
+  if (!g || !g.fecha) return `<div class="card gcard"><div class="mm">Garmin</div><div class="nt">Sin datos de Garmin para este día todavía (se descargan solos varias veces al día tras sincronizar el reloj). Si no llegan, rellena abajo.</div></div>`;
+  const s = g.sueno || {}, h = g.hrv || {}, bb = g.body_battery || {};
+  const c = (k, v, sub) => v == null ? "" : `<div><span>${k}</span><b>${v}</b>${sub ? `<small>${sub}</small>` : ""}</div>`;
+  const est = h.estado ? `<i class="hv ${{"Equilibrada":"ok","Desequilibrada":"mid","Baja":"bad"}[h.estado] || ""}">${esc(h.estado)}</i>` : "";
+  const acts = (g.actividades || []).map(a => `<li><b>${esc(a.nombre || ACT[a.tipo] || a.tipo)}</b> · ${num(Math.round(a.duracion_min))}'${a.distancia_km ? ` · ${num(a.distancia_km)} km` : ""}${a.fc_media ? ` · FC ${Math.round(a.fc_media)}` : ""}${a.te_aerobico != null ? ` · TE ${num(a.te_aerobico)}${a.te_anaerobico ? "/" + num(a.te_anaerobico) : ""}` : ""}</li>`).join("");
+  return `<div class="card gcard"><div class="mm" style="margin-bottom:8px">Garmin · automático</div><div class="gg">
+    ${c("Sueño", s.min != null ? hm(s.min) : null, [s.puntuacion != null ? `puntuación ${s.puntuacion}` : "", s.profundo_min != null ? `profundo ${hm(s.profundo_min)}` : ""].filter(Boolean).join(" · "))}
+    ${c("VFC noche", h.noche_ms != null ? `${h.noche_ms} ms` : null, `${est}${h.media_7d_ms != null ? ` 7 d: ${h.media_7d_ms}` : ""}`)}
+    ${c("FC reposo", g.fc_reposo, g.fc_reposo_7d != null ? `7 d: ${g.fc_reposo_7d}` : "")}
+    ${c("Pasos", g.pasos != null ? g.pasos.toLocaleString("es-ES") : null, g.km_andados ? `${num(g.km_andados)} km` : "")}
+    ${c("Body Battery", bb.max != null ? `${bb.max} → ${bb.min}` : null, bb.cargado != null ? `+${bb.cargado} / −${bb.gastado}` : "")}
+    ${c("Estrés medio", g.estres_medio, g.min_intensos != null ? `${g.min_intensos} min intensos` : "")}
+  </div>${acts ? `<div class="mm" style="margin:10px 0 4px">Actividades</div><ul class="list gacts">${acts}</ul>` : ""}
+  <div class="nt" style="margin-top:6px">Actualizado ${esc((g.actualizado || "").slice(11,16))}${g.fecha === hoyISO() ? " · los pasos y el Body Battery de hoy siguen sumando" : ""}</div></div>`;
+}
 function pintaControl(){
   const v = document.getElementById("v-control"), d = ctrl.diario[ctrlFecha] || {};
   const dom = addD(ctrlFecha, (7 - dt(ctrlFecha).getDay()) % 7), w = ctrl.semanal[dom] || {};
   const seg = (k, ops, val) => `<div class="seg" data-seg="${k}">${ops.map(o => `<button class="${val===o?"on":""}" data-val="${esc(o)}">${esc(o)}</button>`).join("")}</div>`;
   const hh = d.sueno_min != null ? Math.floor(d.sueno_min/60) : "", mm = d.sueno_min != null ? d.sueno_min % 60 : "";
+  const g = garmin[ctrlFecha] || {}, gS = g.sueno && g.sueno.min != null, gH = g.hrv && g.hrv.noche_ms != null, gF = g.fc_reposo != null;
+  const vo2s = ultimoG("vo2max", dom), hrvd = Object.keys(garmin).filter(f => f <= dom && garmin[f].hrv && garmin[f].hrv.media_7d_ms != null).sort().pop(), hrvs = hrvd ? garmin[hrvd].hrv.media_7d_ms : null;
   v.innerHTML = `<h1 class="vt">Control</h1>
     <div class="nav" style="padding:0;width:100%"><button data-cd="-1">◀</button><div class="d">${DIAS[dt(ctrlFecha).getDay()]} ${fCorta(ctrlFecha)}<small>${ctrlFecha === hoyISO() ? "Hoy" : ""}</small></div><button data-cd="1">▶</button></div>
-    <div class="card"><div class="mm" style="margin-bottom:8px">Diario</div><div class="fgrid" data-g="diario">
-      <label>Sueño (h)<input type="number" inputmode="numeric" data-c="sueno_h" value="${hh}"></label>
-      <label>Sueño (min)<input type="number" inputmode="numeric" data-c="sueno_m" value="${mm}"></label>
-      <label class="full">VFC (estado Garmin)${seg("hrv_estado", ["Equilibrada","Desequilibrada","Baja","Sin dato"], d.hrv_estado)}</label>
-      <label>VFC (ms)<input type="number" inputmode="numeric" data-c="hrv_ms" value="${d.hrv_ms ?? ""}"></label>
-      <label>FC reposo<input type="number" inputmode="numeric" data-c="fc_reposo" value="${d.fc_reposo ?? ""}"></label>
+    ${garminHTML(g)}
+    <div class="card"><div class="mm" style="margin-bottom:8px">Diario${gS && gH && gF ? " · lo tuyo" : ""}</div><div class="fgrid" data-g="diario">
+      ${gS ? "" : `<label>Sueño (h)<input type="number" inputmode="numeric" data-c="sueno_h" value="${hh}"></label>
+      <label>Sueño (min)<input type="number" inputmode="numeric" data-c="sueno_m" value="${mm}"></label>`}
+      ${gH ? "" : `<label class="full">VFC (estado Garmin)${seg("hrv_estado", ["Equilibrada","Desequilibrada","Baja","Sin dato"], d.hrv_estado)}</label>
+      <label>VFC (ms)<input type="number" inputmode="numeric" data-c="hrv_ms" value="${d.hrv_ms ?? ""}"></label>`}
+      ${gF ? "" : `<label>FC reposo<input type="number" inputmode="numeric" data-c="fc_reposo" value="${d.fc_reposo ?? ""}"></label>`}
       <label class="full">Dolor peroné (0 = nada)${esc10("diario", "dolor_peroneo", d.dolor_peroneo, 0)}</label>
       <label class="full">Dolor rodilla (0 = nada)${esc10("diario", "dolor_rodilla", d.dolor_rodilla, 0)}</label>
       <label class="full">RPE del día${esc10("diario", "rpe", d.rpe, 1)}</label>
@@ -884,9 +924,8 @@ function pintaControl(){
       <button class="pri" data-guarda="diario" style="margin-top:10px">Guardar control del día</button>${estCtrl("diario", ctrlFecha)}</div>
     <div class="card"><div class="mm" style="margin-bottom:8px">Semanal · semana hasta el ${fCorta(dom)}</div><div class="fgrid" data-g="semanal">
       <label>Peso (kg)<input type="number" inputmode="decimal" step="0.1" data-c="peso" value="${w.peso ?? ""}"></label>
-      <label>VO2máx<input type="number" inputmode="numeric" data-c="vo2max" value="${w.vo2max ?? ""}"></label>
-
-      <label>VFC media (ms)<input type="number" inputmode="numeric" data-c="hrv_ms" value="${w.hrv_ms ?? ""}"></label>
+      ${vo2s ? `<div class="gauto"><span>VO2máx · Garmin</span><b>${num(vo2s.v)}</b><small>${fCorta(vo2s.f)}</small></div>` : `<label>VO2máx<input type="number" inputmode="numeric" data-c="vo2max" value="${w.vo2max ?? ""}"></label>`}
+      ${hrvs != null ? `<div class="gauto"><span>VFC media 7 d · Garmin</span><b>${hrvs}</b><small>ms</small></div>` : `<label>VFC media (ms)<input type="number" inputmode="numeric" data-c="hrv_ms" value="${w.hrv_ms ?? ""}"></label>`}
       <label class="full">Sensación de la semana (1-10)${esc10("semanal", "sensacion", w.sensacion, 1)}</label>
       <label class="full">Notas de la semana<textarea data-c="notas">${esc(w.notas || "")}</textarea></label></div>
       <button class="pri" data-guarda="semanal" style="margin-top:10px">Guardar control semanal</button>${estCtrl("semanal", dom)}</div>`;
