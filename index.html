@@ -114,9 +114,9 @@ textarea{min-height:60px;resize:vertical}
 .list{margin:4px 0 0;padding-left:18px;font-size:14px}.list li{margin:2px 0}
 .empty{background:var(--surface);border:1px dashed var(--line);padding:24px;color:var(--muted);text-align:center}
 /* perfil */
-.cover{position:relative;margin:-12px calc(-1*max(14px,env(safe-area-inset-left))) 0;height:calc(100svh - 52px - var(--navh) - env(safe-area-inset-bottom));min-height:420px;background:radial-gradient(ellipse at 50% 40%,#2a3322 0%,#141714 72%);display:flex;align-items:center;justify-content:center;overflow-x:clip;overflow-y:visible;z-index:0}
-.cover > img{height:88%;max-width:92%;object-fit:contain;filter:drop-shadow(0 0 24px rgba(169,185,140,.25))}
-.cover .cn{z-index:0;position:absolute;left:16px;right:16px;top:14px;font-family:var(--display);font-weight:800;font-size:clamp(72px,24vw,130px);text-transform:uppercase;color:#e9ece6;line-height:.85;letter-spacing:-.01em;text-shadow:0 4px 30px rgba(0,0,0,.6);will-change:transform,opacity;pointer-events:none}
+.cover{margin:-12px calc(-1*max(14px,env(safe-area-inset-left))) 0;height:calc(100svh - 52px - var(--navh) - env(safe-area-inset-bottom));min-height:420px;background:radial-gradient(ellipse at 50% 40%,#2a3322 0%,#141714 72%);display:flex;align-items:center;justify-content:center;overflow:hidden;z-index:0;position:sticky;top:var(--hh,52px);align-self:start}
+.cover > img{height:72%;max-width:92%;align-self:flex-end;margin-bottom:34px;object-fit:contain;filter:drop-shadow(0 0 24px rgba(169,185,140,.25))}
+.cover .cn{z-index:2;position:absolute;left:16px;right:16px;top:14px;font-family:var(--display);font-weight:800;font-size:clamp(72px,24vw,130px);text-transform:uppercase;color:#e9ece6;line-height:.85;letter-spacing:-.01em;text-shadow:0 4px 30px rgba(0,0,0,.6);will-change:transform,opacity;pointer-events:none}
 .cover .cn small{display:block;font-family:var(--mono);font-size:13px;font-weight:500;color:#f2c200;letter-spacing:.1em;margin-top:10px;text-shadow:none}
 .cover .down{position:absolute;bottom:10px;left:0;right:0;text-align:center;font-family:var(--mono);font-size:11px;color:#a9b98c;animation:bob 1.8s ease-in-out infinite}
 @keyframes bob{50%{transform:translateY(4px)}}
@@ -158,10 +158,10 @@ details.adj p{margin:4px 0;white-space:pre-wrap}
 .chart .gr{stroke:var(--line);stroke-width:1}
 .chart .br{fill:var(--olive)}
 /* temporada */
-.tcover{flex-direction:column;justify-content:center;gap:0;background:radial-gradient(ellipse at 50% 30%,#2a3322 0%,#141714 75%)}
-.tcover .cn{font-size:clamp(44px,14vw,100px)}
+.tcover{flex-direction:column;justify-content:flex-start;gap:0;background:radial-gradient(ellipse at 50% 30%,#2a3322 0%,#141714 75%)}
+.tcover .cn{position:relative;left:auto;right:auto;top:auto;align-self:stretch;padding:14px 16px 0;font-size:clamp(44px,14vw,100px)}
 .tcover .cn small{font-size:11.5px;max-width:90%;line-height:1.4}
-.lanes{position:relative;z-index:1;width:100%;display:grid;gap:14px;padding:0 10px;margin-top:70px}
+.lanes{position:relative;z-index:1;width:100%;display:grid;gap:14px;padding:0 10px;margin-top:auto;margin-bottom:auto}
 .lane .lh{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--display);font-weight:700;font-size:17px;text-transform:uppercase;color:#e9ece6;margin:0 2px 4px}
 .lane .lh span{font-family:var(--mono);font-size:12px;font-weight:500;color:#f2c200;text-transform:none}
 .track{position:relative;width:100%;aspect-ratio:5/1;overflow:hidden;border:1px solid rgba(255,255,255,.12)}
@@ -664,7 +664,7 @@ function pintaPerfil(){
   if (!perfil){ v.innerHTML = `<div class="empty">Pulsa ⟳ para descargar tu perfil.</div>`; return; }
   const a = perfil.atleta, peso = pesoActual(), vo2 = a.vo2max && a.vo2max[a.vo2max.length-1];
   v.innerHTML = `
-    <div class="cover" id="cover"><img src="portada.png" alt="" onerror="this.parentNode.classList.add('vacia')"><div class="cn">${esc(a.nombre)}<small>Hyrox Open · sub 1 h</small></div><div class="down">Desliza ↓</div></div>
+    <div class="cover" id="cover"><img src="img/figura.webp" alt="" onerror="this.parentNode.classList.add('vacia')"><div class="cn">${esc(a.nombre)}<small>Hyrox Open · sub 1 h</small></div><div class="down">Desliza ↓</div></div>
     <div class="pinfo"><div class="kv"><div><span>Peso</span> <b>${peso ? num(peso.kg) : "—"}</b> kg</div><div><span>Altura</span> <b>${a.altura_cm}</b> cm</div><div><span>VO2máx</span> <b>${vo2 ? vo2.v : "—"}</b></div></div>
     ${a.peso.length > 1 ? `<div class="card"><div class="mm">Peso</div>${lineChart(a.peso.map(p => ({x:p.fecha, y:p.kg})), {})}</div>` : `<div class="nt">Peso del ${fCorta(peso.fecha)}. La gráfica aparecerá con más pesajes.</div>`}
     <h3 class="st">Carga de la semana</h3><div class="card">${cargaHTML()}</div>
@@ -682,11 +682,10 @@ function pintaPerfil(){
 // la portada se desvanece al deslizar
 window.addEventListener("scroll", () => {
   if (vista !== "perfil" && vista !== "temporada") return; const c = document.getElementById("v-" + vista).querySelector(".cover"); if (!c) return;
-  const y = window.scrollY, h = c.offsetHeight, n = c.querySelector(".cn"), im = c.querySelector("img"), d = c.querySelector(".down");
-  // el nombre baja más despacio que la página (sigue a la vista) mientras se difumina
-  n.style.transform = `translateY(${Math.min(y, h)}px)`; n.style.opacity = Math.max(0, 1 - y / (h * .8));
-  const ln = c.querySelector(".lanes"); if (ln) ln.style.opacity = Math.max(.1, 1 - y / (h * .9));
-  if (im && !ln){ im.style.transform = `translateY(${Math.min(y * .5, h)}px)`; im.style.opacity = Math.max(.1, 1 - y / (h * .9)); } if (d) d.style.opacity = Math.max(0, 1 - y / 80);
+  const y = window.scrollY, h = c.offsetHeight, f = v => String(Math.max(0, Math.min(1, v)));
+  // la portada se queda quieta (sticky) y solo cambia la opacidad: suave, sin saltos
+  c.style.opacity = f(1 - y / (h * .85));
+  const d = c.querySelector(".down"); if (d) d.style.opacity = f(1 - y / 80);
 }, {passive:true});
 
 /* ================= PROGRESO ================= */
@@ -852,6 +851,8 @@ document.getElementById("cTest").onclick = async () => {
 };
 window.addEventListener("online", vaciarCola);
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+const fijaCab = () => document.documentElement.style.setProperty("--hh", document.querySelector("header").offsetHeight + "px");
+fijaCab(); window.addEventListener("resize", fijaCab);
 irVista(vista); pintaSync();
 if (cfg.token) sincronizar();
 </script>
