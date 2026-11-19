@@ -115,12 +115,12 @@ textarea{min-height:60px;resize:vertical}
 .empty{background:var(--surface);border:1px dashed var(--line);padding:24px;color:var(--muted);text-align:center}
 /* perfil */
 .cover{position:relative;margin:-12px calc(-1*max(14px,env(safe-area-inset-left))) 0;height:calc(100svh - 52px - var(--navh) - env(safe-area-inset-bottom));min-height:420px;background:radial-gradient(ellipse at 50% 40%,#2a3322 0%,#141714 72%);display:flex;align-items:center;justify-content:center;overflow-x:clip;overflow-y:visible;z-index:0}
-.cover img{height:88%;max-width:92%;object-fit:contain;filter:drop-shadow(0 0 24px rgba(169,185,140,.25))}
+.cover > img{height:88%;max-width:92%;object-fit:contain;filter:drop-shadow(0 0 24px rgba(169,185,140,.25))}
 .cover .cn{z-index:0;position:absolute;left:16px;right:16px;top:14px;font-family:var(--display);font-weight:800;font-size:clamp(72px,24vw,130px);text-transform:uppercase;color:#e9ece6;line-height:.85;letter-spacing:-.01em;text-shadow:0 4px 30px rgba(0,0,0,.6);will-change:transform,opacity;pointer-events:none}
 .cover .cn small{display:block;font-family:var(--mono);font-size:13px;font-weight:500;color:#f2c200;letter-spacing:.1em;margin-top:10px;text-shadow:none}
 .cover .down{position:absolute;bottom:10px;left:0;right:0;text-align:center;font-family:var(--mono);font-size:11px;color:#a9b98c;animation:bob 1.8s ease-in-out infinite}
 @keyframes bob{50%{transform:translateY(4px)}}
-.cover.vacia img{display:none}
+.cover.vacia > img{display:none}
 .mus{display:grid;grid-template-columns:110px 1fr 46px;gap:8px;align-items:center;font-size:13.5px;padding:3px 0}
 .mus .bar{height:10px}.mus .bar i{background:linear-gradient(90deg,var(--olive),var(--accent))}
 .mus span:last-child{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:right}
@@ -158,6 +158,18 @@ details.adj p{margin:4px 0;white-space:pre-wrap}
 .chart .gr{stroke:var(--line);stroke-width:1}
 .chart .br{fill:var(--olive)}
 /* temporada */
+.tcover{flex-direction:column;justify-content:center;gap:0;background:radial-gradient(ellipse at 50% 30%,#2a3322 0%,#141714 75%)}
+.tcover .cn{font-size:clamp(44px,14vw,100px)}
+.tcover .cn small{font-size:11.5px;max-width:90%;line-height:1.4}
+.lanes{position:relative;z-index:1;width:100%;display:grid;gap:14px;padding:0 10px;margin-top:70px}
+.lane .lh{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--display);font-weight:700;font-size:17px;text-transform:uppercase;color:#e9ece6;margin:0 2px 4px}
+.lane .lh span{font-family:var(--mono);font-size:12px;font-weight:500;color:#f2c200;text-transform:none}
+.track{position:relative;width:100%;aspect-ratio:5/1;overflow:hidden;border:1px solid rgba(255,255,255,.12)}
+.track .bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
+.track .sp{position:absolute;bottom:3%;height:66%;width:auto;image-rendering:pixelated;cursor:pointer;filter:drop-shadow(0 2px 3px rgba(0,0,0,.6))}
+.tip{display:none;margin-top:6px;font-size:13px;color:#e9ece6;background:rgba(20,23,20,.9);border-left:3px solid #f2c200;padding:6px 10px}
+.tip.on{display:block}.tip span{color:#a9b98c}
+
 .tsec{display:grid;gap:10px}
 .tsh{font-family:var(--display);font-weight:700;font-size:20px;text-transform:uppercase;letter-spacing:.02em;display:flex;align-items:center;gap:10px;margin-top:6px}
 .tsh span{font-family:var(--mono);font-size:11px;font-weight:500;background:var(--accent);color:var(--accent-ink);padding:2px 6px}
@@ -669,11 +681,12 @@ function pintaPerfil(){
 }
 // la portada se desvanece al deslizar
 window.addEventListener("scroll", () => {
-  if (vista !== "perfil") return; const c = document.getElementById("cover"); if (!c) return;
+  if (vista !== "perfil" && vista !== "temporada") return; const c = document.getElementById("v-" + vista).querySelector(".cover"); if (!c) return;
   const y = window.scrollY, h = c.offsetHeight, n = c.querySelector(".cn"), im = c.querySelector("img"), d = c.querySelector(".down");
   // el nombre baja más despacio que la página (sigue a la vista) mientras se difumina
   n.style.transform = `translateY(${Math.min(y, h)}px)`; n.style.opacity = Math.max(0, 1 - y / (h * .8));
-  if (im){ im.style.transform = `translateY(${Math.min(y * .5, h)}px)`; im.style.opacity = Math.max(.1, 1 - y / (h * .9)); } if (d) d.style.opacity = Math.max(0, 1 - y / 80);
+  const ln = c.querySelector(".lanes"); if (ln) ln.style.opacity = Math.max(.1, 1 - y / (h * .9));
+  if (im && !ln){ im.style.transform = `translateY(${Math.min(y * .5, h)}px)`; im.style.opacity = Math.max(.1, 1 - y / (h * .9)); } if (d) d.style.opacity = Math.max(0, 1 - y / 80);
 }, {passive:true});
 
 /* ================= PROGRESO ================= */
@@ -740,8 +753,15 @@ function pintaTemporada(){
   const b = t.bloque_actual, total = Math.max(1, (dt(b.fin) - dt(b.inicio)) / 864e5 + 1), hecho = Math.min(total, Math.max(0, (dt(hoy) - dt(b.inicio)) / 864e5 + 1));
   const semHoy = plan[hoy] && plan[hoy].semana;
   const fases = (t.fases || []).map((f, i) => ({f, i})).filter(({i}) => verFases || visibleFase(t.fases, i, hoy));
-  v.innerHTML = `<h1 class="vt">Temporada</h1>${t.objetivo ? `<div class="nt">${esc(t.objetivo)}</div>` : ""}
-    <section class="tsec"><div class="tsh"><span>01</span> Próximos hitos</div>
+  const INICIO = "2026-10-23", CALLES = [["maraton", 0], ["agm", 1], ["hyrox", 2]];
+  const prog = f => Math.min(1, Math.max(0, (dt(hoy) - dt(INICIO)) / (dt(f) - dt(INICIO))));
+  v.innerHTML = `<div class="cover tcover" id="cover"><div class="cn">Temporada<small>${esc(t.objetivo || "")}</small></div>
+      <div class="lanes">${CALLES.map(([k, i]) => { const [n, f, txt, sub] = hitos[i], pr = prog(f);
+        return `<div class="lane"><div class="lh"><b>${n}</b> <span>${i === 2 ? "≈ " : ""}${Math.max(0, dias(f))} días</span></div>
+          <div class="track"><img class="bg" src="img/fondo-${k}.webp" alt=""><img class="sp" src="img/corredor-${k}.webp" alt="${n}" data-tip="${i}" style="left:calc(${(pr*100).toFixed(1)}% * .86)"></div>
+          <div class="tip" id="tip${i}"><b>${n}</b> · ${txt}<br>Faltan ${Math.max(0, dias(f))} días · ${Math.round(pr*100)} % del camino<br><span>${sub}</span></div></div>`; }).join("")}</div>
+      <div class="down">Desliza ↓</div></div>
+    <div class="pinfo"><section class="tsec"><div class="tsh"><span>01</span> Próximos hitos</div>
       <div class="hitos">${hitos.map(([n, f, txt, sub], i) => `<div class="hito"><div class="hn">${n}</div><div class="hd"><b>${i === 2 ? "≈ " : ""}${Math.max(0, dias(f))}</b> días</div><div class="hf">${txt}</div><div class="hs2">${sub}</div></div>`).join("")}</div>
       <div class="nt">El Hyrox aún no tiene fecha: cuento hasta el 1 de octubre.</div></section>
     <section class="tsec"><div class="tsh"><span>02</span> Bloque actual</div>
@@ -751,8 +771,11 @@ function pintaTemporada(){
     <section class="tsec"><div class="tsh"><span>03</span> Fases de la temporada</div>
       <div class="linea">${fases.map(({f, i}) => { const cur = f.inicio <= hoy && hoy <= f.fin, pas = f.fin < hoy;
         return `<div class="fase ${cur ? "cur" : ""} ${pas ? "pas" : ""}"><div class="fd">${fCorta(f.inicio)} → ${fCorta(f.fin)}${cur ? ` <em>Ahora</em>` : ""}</div><div class="fn">${esc(f.nombre)}</div>${f.foco ? `<div class="ffo">${esc(f.foco)}</div>` : ""}${f.claves ? `<div class="pk">${esc(Array.isArray(f.claves) ? f.claves.join(" · ") : f.claves)}</div>` : ""}${f.explicacion ? `<button class="why" data-x="f${i}">Por qué</button>` : ""}</div>`; }).join("")}</div>
-      <div class="btns"><button data-x="todas">${verFases ? "Ver solo la actual y la siguiente" : `Ver todas las fases (${(t.fases || []).length})`}</button></div></section>`;
-  v.onclick = ev => { const x = ev.target.closest("[data-x]"); if (!x) return; const k = x.dataset.x;
+      <div class="btns"><button data-x="todas">${verFases ? "Ver solo la actual y la siguiente" : `Ver todas las fases (${(t.fases || []).length})`}</button></div></section></div>`;
+  v.onclick = ev => {
+    const sp = ev.target.closest("[data-tip]");
+    if (sp){ const tp = document.getElementById("tip" + sp.dataset.tip), on = tp.classList.contains("on"); v.querySelectorAll(".tip").forEach(x => x.classList.remove("on")); if (!on) tp.classList.add("on"); return; }
+    const x = ev.target.closest("[data-x]"); if (!x) return; const k = x.dataset.x;
     if (k === "todas"){ verFases = !verFases; pintaTemporada(); return; }
     if (k === "b") abrirXp(`${b.inicio} → ${b.fin}`, b.nombre, b.explicacion);
     else if (k[0] === "w"){ const w = b.semanas[+k.slice(1)]; abrirXp(`Semana ${w.n} · ${w.fechas || ""}`, w.foco || `Semana ${w.n}`, w.explicacion); }
