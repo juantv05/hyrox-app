@@ -103,6 +103,7 @@ input.mal{border-color:var(--bad);outline:1px solid var(--bad)}
 .row.done .ck{background:var(--ok);border-color:var(--ok);color:#fff}
 .row.extra .n{color:var(--warn)}
 .btns{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap}
+.hecha{justify-self:start;font-family:var(--mono);font-size:12px;background:transparent;border:1px solid var(--line);color:var(--muted);padding:5px 10px;cursor:pointer}.hecha.on{border-color:var(--ok);color:var(--ok)}
 .btns button{font-family:var(--mono);font-size:12px;background:var(--bg);border:1px solid var(--line);color:var(--ink);padding:5px 10px;cursor:pointer}
 .fin{border-top:2px solid var(--ink);padding-top:10px;display:grid;gap:8px}
 .fin .r{display:flex;gap:8px;align-items:center;justify-content:space-between}
@@ -315,24 +316,37 @@ async function bajarHistorial(){
   LS.set("hist", hist);
 }
 async function subir(f){
-  const path = `registros/${f}.json`;
+  let path, cont, msg;
+  if (f.startsWith("control/")){ const [, g, d] = f.split("/"); path = `${f}.json`; cont = (ctrl[g] || {})[d] || {}; msg = `Control ${g} ${d}`; }
+  else { path = `registros/${f}.json`; cont = regs[f]; msg = `Registro ${f}`; }
   const actual = await gh(path);
-  await gh(path, {method:"PUT", body:{message:`Registro ${f}`, content:b64(JSON.stringify(regs[f], null, 1)), branch:cfg.rama, ...(actual && actual.sha ? {sha:actual.sha} : {})}});
+  await gh(path, {method:"PUT", body:{message:msg, content:b64(JSON.stringify(cont, null, 1)), branch:cfg.rama, ...(actual && actual.sha ? {sha:actual.sha} : {})}});
 }
+const encola = k => { if (!cola.includes(k)) cola.push(k); LS.set("cola", cola); pintaSync(); };
 async function vaciarCola(){
   if (!cfg.token || !navigator.onLine || !cola.length) return pintaSync();
   for (const f of [...cola]){
     try{ await subir(f); cola = cola.filter(x => x !== f); LS.set("cola", cola);
-         Object.values(regs[f].sesiones).forEach(s => { if (s.terminada) s.enviada = true; }); hist[f] = JSON.parse(JSON.stringify(regs[f])); LS.set("regs", regs); LS.set("hist", hist); }
+         if (!f.startsWith("control/") && regs[f]){ Object.values(regs[f].sesiones || {}).forEach(s => { if (s.terminada) s.enviada = true; }); hist[f] = JSON.parse(JSON.stringify(regs[f])); LS.set("regs", regs); LS.set("hist", hist); } }
     catch(e){ break; }
   }
   pintaSync(); pintar();
+}
+// control: bajar del repositorio (lo pendiente de enviar en el móvil manda)
+async function bajarControl(){
+  for (const g of ["diario", "semanal"]){
+    const lista = await gh(`control/${g}`); if (!Array.isArray(lista)) continue;
+    const desde = addD(hoyISO(), -60);
+    const fs = lista.map(x => x.name).filter(n => /^\d{4}-\d\d-\d\d\.json$/.test(n)).map(n => n.slice(0,10)).filter(d => d >= desde);
+    await Promise.all(fs.map(async d => { if (cola.includes(`control/${g}/${d}`)) return; const t = await gh(`control/${g}/${d}.json`, {raw:true}); if (t) ctrl[g][d] = JSON.parse(t); }));
+  }
+  LS.set("ctrl", ctrl);
 }
 async function sincronizar(){
   if (!cfg.token){ abrirCfg(); return; }
   if (!navigator.onLine){ pintaSync("Sin red"); return; }
   pintaSync("…");
-  try{ await vaciarCola(); await bajarPlan(); await bajarHistorial().catch(()=>{}); pintaSync(); pintar(); }
+  try{ await vaciarCola(); await bajarPlan(); await Promise.all([bajarHistorial().catch(()=>{}), bajarControl().catch(()=>{})]); pintaSync(); pintar(); }
   catch(e){ console.error("sync", e && e.message); pintaSync("Error"); }
 }
 function pintaSync(txt){
@@ -463,7 +477,7 @@ function render(){
   const lun = addD(fecha, -((d.getDay()+6)%7));
   document.getElementById("week").innerHTML = [0,1,2,3,4,5,6].map(i => {
     const f = addD(lun, i), x = dt(f), dia = regs[f] || hist[f];
-    const log = dia && Object.values(dia.sesiones || {}).some(s => s.terminada);
+    const log = dia && (Object.values(dia.sesiones || {}).some(s => s.terminada) || (dia.dia && Object.values(dia.dia.hechas || {}).some(Boolean)));
     return `<button data-f="${f}" class="${f===fecha?"sel":""} ${f===hoyISO()?"hoy":""} ${log?"log":""}">${DIAS[x.getDay()]}<b>${x.getDate()}</b></button>`;
   }).join("");
   const m = document.getElementById("main");
@@ -472,6 +486,7 @@ function render(){
   const ses = [...p.sesiones].sort((a, b) => (ORDEN[a.momento] ?? 9) - (ORDEN[b.momento] ?? 9));
   const conAjuste = p.ajuste ? ses.find(s => s.tipo !== "agm") : null;
   for (const s of ses) h += sesionHTML(p, s, s === conAjuste);
+  h += diaHTML(p);
   m.innerHTML = h;
   if (irA){ const el = m.querySelector(`[data-eid="${irA}"]`); irA = null; if (el) el.scrollIntoView({block:"start"}); }
 }
@@ -485,13 +500,21 @@ function cabecera(p){
   const km = [p.km_plan ? `${p.km_plan} km con GPS` : "", p.km_sin_registro ? `+${p.km_sin_registro} km sin GPS` : ""].filter(Boolean).join(" · ");
   return `<div class="dayhead">${p.evento ? `<div class="f">${esc(p.evento)}</div>` : ""}${p.foco ? `<div class="f">${esc(p.foco)}</div>` : ""}${km ? `<div class="k">${km}</div>` : ""}<div class="btnrow">${btns.join("")}</div></div>`;
 }
+// registro del día: qué sesiones (no registrables en la app) has hecho y tu nota
+const diaReg = f => { regs[f] = regs[f] || (hist[f] ? JSON.parse(JSON.stringify(hist[f])) : {fecha:f, sesiones:{}}); regs[f].dia = regs[f].dia || {hechas:{}, nota:""}; return regs[f].dia; };
+const hechaBtn = (s) => { const d = (regs[fecha] || hist[fecha] || {}).dia, on = d && d.hechas && d.hechas[s.id]; return `<button class="hecha ${on ? "on" : ""}" data-hecha="${s.id}">${on ? "✓ Hecha" : "Marcar como hecha"}</button>`; };
+function diaHTML(p){
+  const d = (regs[p.fecha] || hist[p.fecha] || {}).dia || {}, pend = cola.includes(p.fecha);
+  return `<div class="card"><div class="mm" style="margin-bottom:6px">Tu nota del día</div><textarea id="notaDia" placeholder="Cómo ha ido el día, sensaciones de carrera o Hyrox, molestias…">${esc(d.nota || "")}</textarea>
+    <div class="btns" style="margin-top:6px"><button data-notadia="1">Guardar nota</button>${d.nota ? (pend ? `<span class="state pend">pendiente de enviar</span>` : `<span class="state ok">✓ guardada</span>`) : ""}</div></div>`;
+}
 function sesionHTML(p, s, ajuste){
   const adj = ajuste ? `<details class="adj"><summary>Cambio del entrenador</summary><p>${esc(p.ajuste)}</p></details>` : "";
   if (s.tipo === "agm"){
-    return `<div class="ses t-agm"><div class="sh"><span class="mm">${esc(s.momento)} · AGM</span></div><h2>${esc(p.agm.codigo || s.titulo)}</h2><div class="sd">${esc(p.agm.detalle || "")}</div>${s.apunte ? `<div class="nt">${esc(s.apunte)}</div>` : ""}</div>`;
+    return `<div class="ses t-agm"><div class="sh"><span class="mm">${esc(s.momento)} · AGM</span></div><h2>${esc(p.agm.codigo || s.titulo)}</h2><div class="sd">${esc(p.agm.detalle || "")}</div>${s.apunte ? `<div class="nt">${esc(s.apunte)}</div>` : ""}${hechaBtn(s)}</div>`;
   }
   const tc = `t-${s.tipo}`;
-  if (!s.estructurado) return `<div class="ses ${tc}"><div class="sh"><span class="mm">${esc(s.momento)} · ${esc(TIPOS[s.tipo] || s.tipo)}</span></div><h2>${esc(s.titulo)}</h2>${adj}<div class="nt">${esc(s.nota || "")}</div></div>`;
+  if (!s.estructurado) return `<div class="ses ${tc}"><div class="sh"><span class="mm">${esc(s.momento)} · ${esc(TIPOS[s.tipo] || s.tipo)}</span></div><h2>${esc(s.titulo)}</h2>${adj}<div class="nt">${esc(s.nota || "")}</div>${["descanso","maniobras"].includes(s.tipo) ? "" : hechaBtn(s)}</div>`;
   const r = sesionRegistrable(s) ? regSesion(p.fecha, s) : null;
   let h = `<div class="ses ${tc}" data-sid="${s.id}"><div class="sh"><span class="mm">${esc(s.momento)} · ${esc(TIPOS[s.tipo] || s.tipo)}</span>${r && r.terminada ? `<span class="badge">✓ registrada</span>` : ""}</div><h2>${esc(s.titulo)}</h2>`;
   h += adj;
@@ -503,7 +526,7 @@ function sesionHTML(p, s, ajuste){
   for (const e of s.ejercicios) h += ejercicioHTML(s, e, r);
   const resto = [...(s.condiciones||[]).map(c => `<div>⚠ <b>Si</b> ${esc(c.si)} → ${esc(c.entonces)}</div>`), ...(s.progresion||[]).map(c => `<div>↗ <b>Si</b> ${esc(c.si)} → ${esc(c.entonces)}</div>`)];
   if (resto.length) h += `<div class="cond">${resto.join("")}</div>`;
-  if (r) h += finHTML(r);
+  if (r) h += finHTML(r); else h += hechaBtn(s);
   return h + `</div>`;
 }
 const fichaDe = nombre => { const n = norm(nombre); return biblio.find(f => f.claves.some(k => n.includes(k))); };
@@ -564,7 +587,9 @@ function ctx(el){
 }
 const mainEl = document.getElementById("main");
 mainEl.addEventListener("input", ev => {
-  const el = ev.target, k = el.dataset.k; if (!k) return;
+  const el = ev.target;
+  if (el.id === "notaDia"){ diaReg(fecha).nota = el.value; guardar(); return; }   // borrador: se envía al pulsar «Guardar nota»
+  const k = el.dataset.k; if (!k) return;
   const {r, x, i} = ctx(el);
   let v;
   if (el.tagName === "TEXTAREA") v = el.value;
@@ -589,6 +614,9 @@ mainEl.addEventListener("click", ev => {
     if (w.dataset.why === "bloque") abrirXp(`${b.inicio} → ${b.fin}`, b.nombre || "Bloque", b.explicacion);
     return;
   }
+  const hb = ev.target.closest("[data-hecha]");
+  if (hb){ const d = diaReg(fecha); d.hechas[hb.dataset.hecha] = !d.hechas[hb.dataset.hecha]; guardar(); encola(fecha); vaciarCola(); render(); return; }
+  if (ev.target.closest("[data-notadia]")){ const d = diaReg(fecha); d.nota = document.getElementById("notaDia").value; guardar(); encola(fecha); vaciarCola(); render(); return; }
   const inf = ev.target.closest("[data-info]");
   if (inf){ ev.stopPropagation(); const f = fichaDe(inf.dataset.info);
     abrirXp("Cómo se hace", f.nombre, `## Pasos\n${f.pasos.map(x => "- " + x).join("\n")}\n\n## Claves\n${f.claves_tecnicas.map(x => "- " + x).join("\n")}\n\n## Errores típicos\n${f.errores.map(x => "- " + x).join("\n")}`); return; }
@@ -607,7 +635,7 @@ mainEl.addEventListener("click", ev => {
   if (a === "del") x.series.pop();
   if (a === "fin"){
     r.terminada = true; r.enviada = false; r.terminada_en = new Date().toISOString();
-    if (!cola.includes(fecha)) cola.push(fecha);
+    encola(fecha);
     LS.set("cola", cola); guardar(); vaciarCola();
   }
   guardar(); render();
@@ -783,6 +811,7 @@ function pintaTemporada(){
 
 /* ================= CONTROL (beta, solo en el móvil) ================= */
 let ctrlFecha = hoyISO();
+const estCtrl = (g, d) => { const k = `control/${g}/${d}`; if (cola.includes(k)) return `<div class="state pend">Guardado en el móvil · se enviará al tener red</div>`; return (ctrl[g] || {})[d] && ctrl[g][d].updatedAt ? `<div class="state ok">✓ Enviado</div>` : ""; };
 // escala de botones con números enteros (desde 0 o desde 1 hasta 10); tocar el marcado lo borra
 const esc10 = (g, k, val, desde) => `<div class="esc" style="--n:${11 - desde}">${Array.from({length:11 - desde}, (_, i) => i + desde).map(n => `<button type="button" class="${val === n ? "on" : ""}" data-esc="${g}:${k}" data-v="${n}">${n}</button>`).join("")}</div>`;
 function pintaControl(){
@@ -791,7 +820,6 @@ function pintaControl(){
   const seg = (k, ops, val) => `<div class="seg" data-seg="${k}">${ops.map(o => `<button class="${val===o?"on":""}" data-val="${esc(o)}">${esc(o)}</button>`).join("")}</div>`;
   const hh = d.sueno_min != null ? Math.floor(d.sueno_min/60) : "", mm = d.sueno_min != null ? d.sueno_min % 60 : "";
   v.innerHTML = `<h1 class="vt">Control</h1>
-    <div class="beta">BETA · se guarda solo en tu móvil. De momento sigue rellenando el artefacto «Control diario»: esto aún no lo leo.</div>
     <div class="nav" style="padding:0;width:100%"><button data-cd="-1">◀</button><div class="d">${DIAS[dt(ctrlFecha).getDay()]} ${fCorta(ctrlFecha)}<small>${ctrlFecha === hoyISO() ? "Hoy" : ""}</small></div><button data-cd="1">▶</button></div>
     <div class="card"><div class="mm" style="margin-bottom:8px">Diario</div><div class="fgrid" data-g="diario">
       <label>Sueño (h)<input type="number" inputmode="numeric" data-c="sueno_h" value="${hh}"></label>
@@ -802,14 +830,16 @@ function pintaControl(){
       <label class="full">Dolor peroné (0 = nada)${esc10("diario", "dolor_peroneo", d.dolor_peroneo, 0)}</label>
       <label class="full">Dolor rodilla (0 = nada)${esc10("diario", "dolor_rodilla", d.dolor_rodilla, 0)}</label>
       <label class="full">RPE del día${esc10("diario", "rpe", d.rpe, 1)}</label>
-      <label class="full">Notas<textarea data-c="notas">${esc(d.notas || "")}</textarea></label></div></div>
+      <label class="full">Notas<textarea data-c="notas">${esc(d.notas || "")}</textarea></label></div>
+      <button class="pri" data-guarda="diario" style="margin-top:10px">Guardar control del día</button>${estCtrl("diario", ctrlFecha)}</div>
     <div class="card"><div class="mm" style="margin-bottom:8px">Semanal · semana hasta el ${fCorta(dom)}</div><div class="fgrid" data-g="semanal">
       <label>Peso (kg)<input type="number" inputmode="decimal" step="0.1" data-c="peso" value="${w.peso ?? ""}"></label>
       <label>VO2máx<input type="number" inputmode="numeric" data-c="vo2max" value="${w.vo2max ?? ""}"></label>
 
       <label>VFC media (ms)<input type="number" inputmode="numeric" data-c="hrv_ms" value="${w.hrv_ms ?? ""}"></label>
       <label class="full">Sensación de la semana (1-10)${esc10("semanal", "sensacion", w.sensacion, 1)}</label>
-      <label class="full">Notas de la semana<textarea data-c="notas">${esc(w.notas || "")}</textarea></label></div></div>`;
+      <label class="full">Notas de la semana<textarea data-c="notas">${esc(w.notas || "")}</textarea></label></div>
+      <button class="pri" data-guarda="semanal" style="margin-top:10px">Guardar control semanal</button>${estCtrl("semanal", dom)}</div>`;
   v.oninput = ev => { const el = ev.target, k = el.dataset.c; if (!k) return; const g = el.closest("[data-g]").dataset.g;
     const doc = g === "diario" ? (ctrl.diario[ctrlFecha] = ctrl.diario[ctrlFecha] || {fecha:ctrlFecha}) : (ctrl.semanal[dom] = ctrl.semanal[dom] || {semana_hasta:dom});
     if (k === "sueno_h" || k === "sueno_m"){ const h = +v.querySelector('[data-c="sueno_h"]').value || 0, m2 = +v.querySelector('[data-c="sueno_m"]').value || 0; doc.sueno_min = h*60 + m2; }
@@ -819,6 +849,10 @@ function pintaControl(){
     LS.set("ctrl", ctrl); };
   v.onclick = ev => {
     const c = ev.target.closest("[data-cd]"); if (c){ ctrlFecha = addD(ctrlFecha, +c.dataset.cd); pintaControl(); return; }
+    const gu = ev.target.closest("[data-guarda]");
+    if (gu){ const g = gu.dataset.guarda, d = g === "diario" ? ctrlFecha : dom;
+      if (!ctrl[g][d]) { ctrl[g][d] = g === "diario" ? {fecha:d} : {}; }
+      ctrl[g][d].updatedAt = new Date().toISOString(); LS.set("ctrl", ctrl); encola(`control/${g}/${d}`); vaciarCola(); pintaControl(); return; }
     const e = ev.target.closest("[data-esc]");
     if (e){ ev.preventDefault(); const [g, k] = e.dataset.esc.split(":"), val = +e.dataset.v;
       const doc = g === "diario" ? (ctrl.diario[ctrlFecha] = ctrl.diario[ctrlFecha] || {fecha:ctrlFecha}) : (ctrl.semanal[dom] = ctrl.semanal[dom] || {semana_hasta:dom});
