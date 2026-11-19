@@ -41,9 +41,9 @@ header{position:sticky;top:0;z-index:7;background:color-mix(in srgb,var(--bg) 88
 .menu .pan .st2{font-family:var(--mono);font-size:12px;color:var(--muted);margin:14px 18px 0}
 #sync.pend{color:var(--warn)}
 /* barra inferior */
-nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));padding-bottom:env(safe-area-inset-bottom);
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));padding-bottom:env(safe-area-inset-bottom);
   background:linear-gradient(to top,var(--bg) 70%,color-mix(in srgb,var(--bg) 0%,transparent));-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
-nav.tabs button{background:none;border:0;color:var(--ink);opacity:.5;height:var(--navh);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-family:var(--display);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0;cursor:pointer;min-width:0;position:relative;transition:opacity .2s;white-space:nowrap;overflow:hidden}
+nav.tabs button{background:none;border:0;color:var(--ink);opacity:.5;height:var(--navh);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-family:var(--display);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.01em;cursor:pointer;min-width:0;position:relative;transition:opacity .2s;white-space:nowrap;overflow:hidden}
 nav.tabs svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 nav.tabs button[aria-selected=true]{opacity:1}
 nav.tabs button[aria-selected=true]::before{content:"";position:absolute;top:6px;width:18px;height:2px;background:var(--accent)}
@@ -224,6 +224,10 @@ dialog.xp::backdrop,dialog::backdrop{background:rgba(10,12,10,.55)}
 .gg .hv{font-style:normal;font-weight:600}.hv.ok{color:var(--ok)}.hv.mid{color:var(--warn)}.hv.bad{color:var(--bad)}
 .gauto b{font-family:var(--display);font-size:22px;font-weight:800}
 .gacts{font-size:13.5px}
+/* subapartados de Progreso */
+.subsw{position:sticky;top:var(--hh,52px);z-index:5;margin:-12px calc(-1*max(14px,env(safe-area-inset-left))) 0;padding:8px max(14px,env(safe-area-inset-left));background:var(--bg);border-bottom:1px solid var(--line)}
+.subsw .seg{flex-wrap:nowrap}.subsw .seg button{padding:8px 6px;font-size:12.5px;text-transform:uppercase;letter-spacing:.05em}
+.subsw + .cover{margin-top:-12px;top:calc(var(--hh,52px) + 51px);height:calc(100svh - 52px - 51px - var(--navh) - env(safe-area-inset-bottom))}
 /* salud */
 .sgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .sc{background:var(--surface);border:1px solid var(--line);padding:12px;text-align:left;color:var(--ink);font:inherit;cursor:pointer;display:grid;gap:2px;align-content:start;min-width:0}
@@ -272,7 +276,6 @@ dialog.xp::backdrop,dialog::backdrop{background:rgba(10,12,10,.55)}
  <button data-v="entreno" aria-selected="true"><svg viewBox="0 0 24 24"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/></svg>Entreno</button>
  <button data-v="perfil"><svg viewBox="0 0 24 24"><circle cx="12" cy="6" r="3"/><path d="M12 9v7M5 11h14M12 16l-4 6M12 16l4 6"/></svg>Perfil</button>
  <button data-v="progreso"><svg viewBox="0 0 24 24"><path d="M3 20h18M5 16l4-5 4 3 6-8"/><circle cx="19" cy="6" r="1.2"/></svg>Progreso</button>
- <button data-v="temporada"><svg viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg>Temporada</button>
  <button data-v="salud"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>Salud</button>
  <button data-v="control"><svg viewBox="0 0 24 24"><path d="M3 12h4l2-5 4 10 2-5h6"/></svg>Control</button>
 </nav>
@@ -521,15 +524,20 @@ function txtUltima(u, tipo){
 }
 
 /* ================= vistas ================= */
-const TITULOS = {entreno:"Entreno", perfil:"Perfil", progreso:"Progreso", temporada:"Temporada", salud:"Salud", control:"Control"};
+const TITULOS = {entreno:"Entreno", perfil:"Perfil", progreso:"Progreso", temporada:"Progreso", salud:"Salud", control:"Control"};
+// «Progreso» agrupa dos subapartados: Temporada (vista temporada) y Entrenos (vista progreso)
+const GRUPO = v => v === "temporada" ? "progreso" : v;
+const subswHTML = act => `<div class="subsw"><div class="seg">${[["temporada","Temporada"],["progreso","Entrenos"]].map(([k, n]) => `<button class="${act === k ? "on" : ""}" data-sub="${k}">${n}</button>`).join("")}</div></div>`;
+document.addEventListener("click", ev => { const b = ev.target.closest("[data-sub]"); if (b && b.dataset.sub !== vista) irVista(b.dataset.sub); });
 function irVista(v){
-  vista = v; LS.set("vista", v);
-  document.querySelectorAll("#tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.v === v));
+  vista = v; LS.set("vista", v); if (GRUPO(v) === "progreso") LS.set("progSub", v);
+  document.querySelectorAll("#tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.v === GRUPO(v)));
   document.querySelectorAll(".view").forEach(s => s.hidden = s.id !== "v-" + v);
   document.getElementById("vtitle").textContent = TITULOS[v];
   pintar(); window.scrollTo(0,0);
 }
-document.getElementById("tabs").addEventListener("click", ev => { const b = ev.target.closest("[data-v]"); if (b) irVista(b.dataset.v); });
+document.getElementById("tabs").addEventListener("click", ev => { const b = ev.target.closest("[data-v]"); if (!b) return;
+  irVista(b.dataset.v === "progreso" ? (GRUPO(vista) === "progreso" ? vista : LS.get("progSub", "temporada")) : b.dataset.v); });
 function pintar(){
   ({entreno:render, perfil:pintaPerfil, progreso:pintaProgreso, temporada:pintaTemporada, salud:pintaSalud, control:pintaControl})[vista]();
 }
@@ -838,7 +846,7 @@ function pintaProgreso(){
   const sem = []; let l = lunes(hoyISO()); for (let i = 7; i >= 0; i--) sem.push(addD(l, -7*i));
   const cuenta = {}; ses.forEach(({f, s}) => { const k = lunes(f); ejHechos(s).forEach(x => cuenta[k] = (cuenta[k] || 0) + (x.series ? x.series.filter(o => o.hecha).length : 0)); });
   const rpeS = ses.filter(x => x.s.rpe_sesion != null).map(x => ({x:x.f, y:x.s.rpe_sesion}));
-  v.innerHTML = `<h1 class="vt">Progreso</h1>
+  v.innerHTML = subswHTML("progreso") + `<h1 class="vt">Entrenos</h1>
     ${!ses.length ? `<div class="empty">Aún no hay sesiones registradas en la app. Las gráficas se llenan solas con cada «Terminar sesión».</div>` : ""}
     <div class="card"><div class="mm">1RM estimado por ejercicio</div>
       ${ejs.length ? `<select id="ejSel">${ejs.map(e => `<option ${e===ejSel?"selected":""}>${esc(e)}</option>`).join("")}</select>${lineChart(Object.entries(porEj[ejSel]).sort().map(([x,y]) => ({x, y})))}<div class="nt">Fórmula de Epley con tu mejor serie de cada día. En fondos y dominadas se calcula sobre el peso total y se muestra como lastre.</div>` : `<div class="nt">Sin datos todavía.</div>`}</div>
@@ -867,7 +875,7 @@ function pintaTemporada(){
   const fases = (t.fases || []).map((f, i) => ({f, i})).filter(({i}) => verFases || visibleFase(t.fases, i, hoy));
   const INICIO = "2026-10-23", CALLES = [["maraton", 0], ["agm", 1], ["hyrox", 2]];
   const prog = f => Math.min(1, Math.max(0, (dt(hoy) - dt(INICIO)) / (dt(f) - dt(INICIO))));
-  v.innerHTML = `<div class="cover tcover" id="cover"><div class="cn">Temporada<small>${esc(t.objetivo || "")}</small></div>
+  v.innerHTML = subswHTML("temporada") + `<div class="cover tcover" id="cover"><div class="cn">Temporada<small>${esc(t.objetivo || "")}</small></div>
       <div class="lanes">${CALLES.map(([k, i]) => { const [n, f, txt, sub] = hitos[i], pr = prog(f);
         return `<div class="lane"><div class="lh"><b>${n}</b> <span>${i === 2 ? "≈ " : ""}${Math.max(0, dias(f))} días</span></div>
           <div class="track"><img class="bg" src="img/fondo-${k}.webp" alt=""><img class="sp" src="img/corredor-${k}.webp" alt="${n}" data-tip="${i}" style="left:calc(${(pr*100).toFixed(1)}% * .86)"></div>
