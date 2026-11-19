@@ -41,9 +41,9 @@ header{position:sticky;top:0;z-index:7;background:color-mix(in srgb,var(--bg) 88
 .menu .pan .st2{font-family:var(--mono);font-size:12px;color:var(--muted);margin:14px 18px 0}
 #sync.pend{color:var(--warn)}
 /* barra inferior */
-nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:grid;grid-template-columns:repeat(5,1fr);padding-bottom:env(safe-area-inset-bottom);
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));padding-bottom:env(safe-area-inset-bottom);
   background:linear-gradient(to top,var(--bg) 70%,color-mix(in srgb,var(--bg) 0%,transparent));-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
-nav.tabs button{background:none;border:0;color:var(--ink);opacity:.5;height:var(--navh);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-family:var(--display);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.01em;cursor:pointer;min-width:0;position:relative;transition:opacity .2s;white-space:nowrap;overflow:hidden}
+nav.tabs button{background:none;border:0;color:var(--ink);opacity:.5;height:var(--navh);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-family:var(--display);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0;cursor:pointer;min-width:0;position:relative;transition:opacity .2s;white-space:nowrap;overflow:hidden}
 nav.tabs svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 nav.tabs button[aria-selected=true]{opacity:1}
 nav.tabs button[aria-selected=true]::before{content:"";position:absolute;top:6px;width:18px;height:2px;background:var(--accent)}
@@ -224,6 +224,20 @@ dialog.xp::backdrop,dialog::backdrop{background:rgba(10,12,10,.55)}
 .gg .hv{font-style:normal;font-weight:600}.hv.ok{color:var(--ok)}.hv.mid{color:var(--warn)}.hv.bad{color:var(--bad)}
 .gauto b{font-family:var(--display);font-size:22px;font-weight:800}
 .gacts{font-size:13.5px}
+/* salud */
+.sgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.sc{background:var(--surface);border:1px solid var(--line);padding:12px;text-align:left;color:var(--ink);font:inherit;cursor:pointer;display:grid;gap:2px;align-content:start;min-width:0}
+.sc.full{grid-column:1/-1}.sc.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.sc .k{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.sc .v{font-family:var(--display);font-size:30px;font-weight:800;line-height:1.05}.sc .v small{font-size:14px;font-weight:600;margin-left:3px}
+.sc .s{font-family:var(--mono);font-size:11.5px;color:var(--muted);line-height:1.45}
+.pbar{height:6px;background:var(--line);margin:6px 0 2px;position:relative;overflow:hidden}.pbar i{position:absolute;left:0;top:0;bottom:0;background:var(--olive)}.pbar i.ok{background:var(--ok)}
+.stk{display:flex;height:10px;margin:8px 0 4px;overflow:hidden}.stk i{display:block;height:100%}
+.f-pro{background:#3b4a2a}.f-rem{background:#8aa060}.f-lig{background:#c8d4ad}.f-des{background:var(--warn)}
+.e-rep{background:#5d8bb0}.e-baj{background:#e8b04a}.e-med{background:#e07a2a}.e-alt{background:#c0392b}
+.leg{display:flex;flex-wrap:wrap;gap:4px 10px;font-family:var(--mono);font-size:10.5px;color:var(--muted)}.leg b{display:inline-block;width:8px;height:8px;margin-right:4px;vertical-align:middle}
+.trend .seg{margin:6px 0 8px;max-width:180px}.chart .mt{stroke:var(--accent);stroke-width:1.5;stroke-dasharray:4 3}
+.chart .br.hoy{fill:var(--accent)}
 /* biblioteca y edición de sesiones */
 .ex.quit .nm s{color:var(--muted)}.ex.quit .pl{color:var(--warn)}
 .ed{margin:4px 0 6px}.ed button{font-size:11.5px;color:var(--muted)}
@@ -251,6 +265,7 @@ dialog.xp::backdrop,dialog::backdrop{background:rgba(10,12,10,.55)}
 <section class="view wrapv" id="v-perfil" hidden></section>
 <section class="view wrapv" id="v-progreso" hidden></section>
 <section class="view wrapv" id="v-temporada" hidden></section>
+<section class="view wrapv" id="v-salud" hidden></section>
 <section class="view wrapv" id="v-control" hidden></section>
 
 <nav class="tabs" id="tabs">
@@ -258,6 +273,7 @@ dialog.xp::backdrop,dialog::backdrop{background:rgba(10,12,10,.55)}
  <button data-v="perfil"><svg viewBox="0 0 24 24"><circle cx="12" cy="6" r="3"/><path d="M12 9v7M5 11h14M12 16l-4 6M12 16l4 6"/></svg>Perfil</button>
  <button data-v="progreso"><svg viewBox="0 0 24 24"><path d="M3 20h18M5 16l4-5 4 3 6-8"/><circle cx="19" cy="6" r="1.2"/></svg>Progreso</button>
  <button data-v="temporada"><svg viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg>Temporada</button>
+ <button data-v="salud"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>Salud</button>
  <button data-v="control"><svg viewBox="0 0 24 24"><path d="M3 12h4l2-5 4 10 2-5h6"/></svg>Control</button>
 </nav>
 
@@ -505,7 +521,7 @@ function txtUltima(u, tipo){
 }
 
 /* ================= vistas ================= */
-const TITULOS = {entreno:"Entreno", perfil:"Perfil", progreso:"Progreso", temporada:"Temporada", control:"Control"};
+const TITULOS = {entreno:"Entreno", perfil:"Perfil", progreso:"Progreso", temporada:"Temporada", salud:"Salud", control:"Control"};
 function irVista(v){
   vista = v; LS.set("vista", v);
   document.querySelectorAll("#tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.v === v));
@@ -515,7 +531,7 @@ function irVista(v){
 }
 document.getElementById("tabs").addEventListener("click", ev => { const b = ev.target.closest("[data-v]"); if (b) irVista(b.dataset.v); });
 function pintar(){
-  ({entreno:render, perfil:pintaPerfil, progreso:pintaProgreso, temporada:pintaTemporada, control:pintaControl})[vista]();
+  ({entreno:render, perfil:pintaPerfil, progreso:pintaProgreso, temporada:pintaTemporada, salud:pintaSalud, control:pintaControl})[vista]();
 }
 
 /* ================= ENTRENO ================= */
@@ -880,6 +896,85 @@ function pintaTemporada(){
 
 /* ================= CONTROL (beta, solo en el móvil) ================= */
 let ctrlFecha = hoyISO();
+/* ================= SALUD (datos de Garmin) ================= */
+let saludFecha = hoyISO(), saludMet = LS.get("saludMet", "pasos"), saludN = LS.get("saludN", 7);
+const vv = (o, ...k) => k.reduce((a, x) => a == null ? null : a[x], o);
+const METS = {
+  pasos:{t:"Pasos", v:g => g.pasos, bar:true, meta:g => g.pasos_objetivo, f:x => Math.round(x).toLocaleString("es-ES")},
+  cal:{t:"Calorías totales", v:g => g.calorias_total, bar:true, f:x => Math.round(x).toLocaleString("es-ES")},
+  fc:{t:"FC en reposo", v:g => g.fc_reposo, f:x => Math.round(x)},
+  int:{t:"Minutos de intensidad", v:g => g.min_intensos, bar:true, f:x => Math.round(x)},
+  sueno:{t:"Sueño (horas)", v:g => vv(g, "sueno", "min") != null ? g.sueno.min / 60 : null, bar:true, meta:() => 8, f:x => num(Math.round(x*10)/10)},
+  vfc:{t:"VFC noche (ms)", v:g => vv(g, "hrv", "noche_ms"), f:x => Math.round(x)},
+  bb:{t:"Body Battery máximo", v:g => vv(g, "body_battery", "max"), f:x => Math.round(x)},
+  est:{t:"Estrés medio", v:g => g.estres_medio, f:x => Math.round(x)}
+};
+function gBars(pts, meta, fmt){
+  const W = 340, H = 150, L = 8, R = 8, T = 16, B = 22, vals = pts.map(p => p.y).filter(v => v != null);
+  const mx = Math.max(1, ...vals, meta || 0) * 1.08, bw = (W - L - R) / pts.length, Y = v => H - B - (H - B - T) * v / mx;
+  let h = `<svg class="chart" viewBox="0 0 ${W} ${H}"><line class="gr" x1="${L}" x2="${W-R}" y1="${H-B}" y2="${H-B}"/>`;
+  if (meta) h += `<line class="mt" x1="${L}" x2="${W-R}" y1="${Y(meta)}" y2="${Y(meta)}"/><text x="${L+2}" y="${Y(meta)-3}">obj. ${fmt(meta)}</text>`;
+  pts.forEach((p, i) => { if (p.y == null) return; const x = L + i*bw + Math.max(1, bw*.15), w = Math.max(2, bw*.7);
+    h += `<rect class="br ${p.x === saludFecha ? "hoy" : ""}" x="${x}" y="${Y(p.y)}" width="${w}" height="${H-B-Y(p.y)}"/>`;
+    if (pts.length <= 7) h += `<text x="${x + w/2}" y="${Y(p.y)-3}" text-anchor="middle">${fmt(p.y)}</text>`; });
+  pts.forEach((p, i) => { if (pts.length <= 7 || i === 0 || i === pts.length - 1) h += `<text x="${L + i*bw + bw/2}" y="${H-7}" text-anchor="middle">${pts.length <= 7 ? DIAS[dt(p.x).getDay()] : fCorta(p.x)}</text>`; });
+  return h + `</svg>`;
+}
+function tendenciaHTML(){
+  const m = METS[saludMet] || METS.pasos, pts = [];
+  for (let i = saludN - 1; i >= 0; i--){ const f = addD(saludFecha, -i), g = garmin[f]; pts.push({x:f, y:g ? m.v(g) ?? null : null}); }
+  const vals = pts.filter(p => p.y != null);
+  if (!vals.length) return `<div class="card trend"><div class="mm">${m.t}</div><div class="nt">Sin datos en este periodo.</div></div>`;
+  const media = vals.reduce((a, p) => a + p.y, 0) / vals.length, g0 = garmin[saludFecha];
+  const graf = m.bar ? gBars(pts, m.meta && g0 ? m.meta(g0) : (m.meta ? m.meta({}) : null), m.f) : lineChart(vals, {});
+  return `<div class="card trend"><div class="mm">Tendencia · ${esc(m.t)}</div>
+    <div class="seg" data-sn>${[7, 30].map(n => `<button class="${saludN === n ? "on" : ""}" data-n="${n}">${n} días</button>`).join("")}</div>
+    ${graf}<div class="nt">Media ${saludN} días: <b>${m.f(media)}</b> · máx ${m.f(Math.max(...vals.map(p => p.y)))} · mín ${m.f(Math.min(...vals.map(p => p.y)))}${vals.length < saludN ? ` · ${saludN - vals.length} días sin datos` : ""}</div></div>`;
+}
+function pintaSalud(){
+  const v = document.getElementById("v-salud"), g = garmin[saludFecha], hoy = saludFecha === hoyISO();
+  const nav = `<h1 class="vt">Salud</h1><div class="nav" style="padding:0;width:100%"><button data-sd="-1">◀</button><div class="d">${DIAS[dt(saludFecha).getDay()]} ${fCorta(saludFecha)}<small>${hoy ? "Hoy" : ""}</small></div><button data-sd="1" ${hoy ? "disabled" : ""}>▶</button></div>`;
+  if (!Object.keys(garmin).length){ v.innerHTML = nav + `<div class="empty">Pulsa ☰ → Actualizar datos para descargar tus datos de Garmin.</div>`; v.onclick = clickSalud; return; }
+  if (!g){ v.innerHTML = nav + `<div class="card"><div class="nt">Sin datos de Garmin para este día (reloj sin sincronizar, maniobras…).</div></div>` + tendenciaHTML(); v.onclick = clickSalud; return; }
+  const s = g.sueno || {}, h = g.hrv || {}, bb = g.body_battery || {}, em = g.estres_min || {};
+  const card = (k, cls, inner) => `<button class="sc ${cls || ""} ${saludMet === k ? "on" : ""}" data-met="${k}">${inner}</button>`;
+  const pct = (a, b) => b ? Math.min(100, Math.round(a / b * 100)) : 0;
+  // minutos de intensidad de la semana (lunes → este día), como cuenta Garmin (vigorosos ×2)
+  const lun = addD(saludFecha, -((dt(saludFecha).getDay() + 6) % 7)); let semInt = 0;
+  for (let f = lun; f <= saludFecha; f = addD(f, 1)) semInt += (garmin[f] && garmin[f].min_intensos) || 0;
+  const objInt = g.min_intensos_objetivo_semana || 150;
+  const stk = (parts) => { const tot = parts.reduce((a, p) => a + (p[1] || 0), 0) || 1; return `<div class="stk">${parts.map(([c, x]) => x ? `<i class="${c}" style="width:${x / tot * 100}%"></i>` : "").join("")}</div>`; };
+  const hvc = {"Equilibrada":"ok", "Desequilibrada":"mid", "Baja":"bad"}[h.estado] || "";
+  let html = nav + `<h3 class="st">Actividad</h3><div class="sgrid">
+    ${card("pasos", "", `<span class="k">Pasos</span><span class="v">${g.pasos != null ? g.pasos.toLocaleString("es-ES") : "—"}</span>
+      ${g.pasos_objetivo ? `<div class="pbar"><i class="${g.pasos >= g.pasos_objetivo ? "ok" : ""}" style="width:${pct(g.pasos, g.pasos_objetivo)}%"></i></div><span class="s">objetivo ${g.pasos_objetivo.toLocaleString("es-ES")}${g.km_andados ? ` · ${num(g.km_andados)} km` : ""}</span>` : ""}`)}
+    ${card("cal", "", `<span class="k">Calorías</span><span class="v">${g.calorias_total != null ? g.calorias_total.toLocaleString("es-ES") : "—"}<small>kcal</small></span>
+      <span class="s">activas ${g.calorias_activas ?? "—"} · reposo ${g.calorias_reposo ?? "—"}</span>`)}
+    ${card("fc", "", `<span class="k">FC en reposo</span><span class="v">${g.fc_reposo ?? "—"}<small>lpm</small></span>
+      <span class="s">7 d: ${g.fc_reposo_7d ?? "—"} · mín ${g.fc_min ?? "—"} · máx ${g.fc_max ?? "—"}</span>`)}
+    ${card("int", "", `<span class="k">Min. intensidad</span><span class="v">${semInt}<small>/ ${objInt}</small></span>
+      <div class="pbar"><i class="${semInt >= objInt ? "ok" : ""}" style="width:${pct(semInt, objInt)}%"></i></div><span class="s">semana · hoy ${g.min_moderados ?? 0} mod. + ${g.min_vigorosos ?? 0} vig.</span>`)}
+  </div><h3 class="st">Recuperación</h3><div class="sgrid">
+    ${card("sueno", "full", `<span class="k">Sueño · noche hasta el ${fCorta(saludFecha)}</span><span class="v">${s.min != null ? hm(s.min) : "—"}${s.puntuacion != null ? `<small>· ${s.puntuacion} pts</small>` : ""}</span>
+      ${s.min != null ? stk([["f-pro", s.profundo_min], ["f-rem", s.rem_min], ["f-lig", s.ligero_min], ["f-des", s.despierto_min]]) + `<div class="leg"><span><b class="f-pro"></b>Profundo ${hm(s.profundo_min || 0)}</span><span><b class="f-rem"></b>REM ${hm(s.rem_min || 0)}</span><span><b class="f-lig"></b>Ligero ${hm(s.ligero_min || 0)}</span><span><b class="f-des"></b>Despierto ${s.despierto_min || 0}'</span></div>
+      <span class="s">${s.acostado ? `${s.acostado} → ${s.levantado}` : ""}${s.necesidad_min ? ` · necesitabas ${hm(s.necesidad_min)}` : ""}${s.fc_media ? ` · FC media ${Math.round(s.fc_media)}` : ""}</span>` : ""}`)}
+    ${card("vfc", "", `<span class="k">VFC noche</span><span class="v">${h.noche_ms ?? "—"}<small>ms</small></span>
+      <span class="s">${h.estado ? `<i class="hv ${hvc}" style="font-style:normal;font-weight:600">${esc(h.estado)}</i><br>` : ""}7 d: ${h.media_7d_ms ?? "—"}${h.rango_equilibrado ? ` · rango ${h.rango_equilibrado.join("–")}` : ""}</span>`)}
+    ${card("bb", "", `<span class="k">Body Battery</span><span class="v">${bb.max ?? "—"}<small>→ ${bb.min ?? "—"}</small></span>
+      <span class="s">+${bb.cargado ?? "—"} cargado<br>−${bb.gastado ?? "—"} gastado</span>`)}
+    ${card("est", "full", `<span class="k">Estrés medio</span><span class="v">${g.estres_medio ?? "—"}</span>
+      ${em.reposo != null ? stk([["e-rep", em.reposo], ["e-baj", em.bajo], ["e-med", em.medio], ["e-alt", em.alto]]) + `<div class="leg"><span><b class="e-rep"></b>Reposo ${hm(em.reposo)}</span><span><b class="e-baj"></b>Bajo ${hm(em.bajo)}</span><span><b class="e-med"></b>Medio ${hm(em.medio)}</span><span><b class="e-alt"></b>Alto ${hm(em.alto)}</span></div>` : ""}`)}
+  </div>` + tendenciaHTML();
+  const acts = (g.actividades || []);
+  if (acts.length) html += `<h3 class="st">Actividades</h3><div class="card"><ul class="list gacts">${acts.map(a => `<li><b>${esc(a.nombre || ACT[a.tipo] || a.tipo)}</b> · ${esc((a.inicio || "").slice(11,16))} · ${num(Math.round(a.duracion_min))}'${a.distancia_km ? ` · ${num(a.distancia_km)} km` : ""}${a.ritmo_min_km ? ` · ${Math.floor(a.ritmo_min_km)}:${String(Math.round(a.ritmo_min_km % 1 * 60)).padStart(2,"0")}/km` : ""}${a.fc_media ? ` · FC ${Math.round(a.fc_media)}` : ""}${a.te_aerobico != null ? ` · TE ${num(a.te_aerobico)}/${num(a.te_anaerobico || 0)}` : ""}${a.carga ? ` · carga ${a.carga}` : ""}</li>`).join("")}</ul></div>`;
+  html += `<div class="nt" style="margin:10px 2px">Actualizado ${esc((g.actualizado || "").slice(11,16))}${hoy ? " · los datos de hoy siguen sumando hasta la descarga de las 21:37" : ""}. Toca una tarjeta para ver su tendencia.</div>`;
+  v.innerHTML = html; v.onclick = clickSalud;
+}
+function clickSalud(ev){
+  const d = ev.target.closest("[data-sd]"); if (d){ const n = addD(saludFecha, +d.dataset.sd); if (n <= hoyISO()){ saludFecha = n; pintaSalud(); } return; }
+  const m = ev.target.closest("[data-met]"); if (m){ saludMet = m.dataset.met; LS.set("saludMet", saludMet); pintaSalud(); const tr = document.querySelector("#v-salud .trend"); if (tr) tr.scrollIntoView({block:"nearest", behavior:"smooth"}); return; }
+  const n = ev.target.closest("[data-n]"); if (n){ saludN = +n.dataset.n; LS.set("saludN", saludN); pintaSalud(); }
+}
 const estCtrl = (g, d) => { const k = `control/${g}/${d}`; if (cola.includes(k)) return `<div class="state pend">Guardado en el móvil · se enviará al tener red</div>`; return (ctrl[g] || {})[d] && ctrl[g][d].updatedAt ? `<div class="state ok">✓ Enviado</div>` : ""; };
 // escala de botones con números enteros (desde 0 o desde 1 hasta 10); tocar el marcado lo borra
 const esc10 = (g, k, val, desde) => `<div class="esc" style="--n:${11 - desde}">${Array.from({length:11 - desde}, (_, i) => i + desde).map(n => `<button type="button" class="${val === n ? "on" : ""}" data-esc="${g}:${k}" data-v="${n}">${n}</button>`).join("")}</div>`;
