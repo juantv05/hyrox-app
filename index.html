@@ -238,7 +238,21 @@ dialog.xp::backdrop,dialog::backdrop{background:rgba(10,12,10,.55)}
 .sc .s{font-family:var(--mono);font-size:11.5px;color:var(--muted);line-height:1.45}
 .pbar{height:6px;background:var(--line);margin:6px 0 2px;position:relative;overflow:hidden}.pbar i{position:absolute;left:0;top:0;bottom:0;background:var(--olive)}.pbar i.ok{background:var(--ok)}
 .stk{display:flex;height:10px;margin:8px 0 4px;overflow:hidden}.stk i{display:block;height:100%}
-.f-pro{background:#3b4a2a}.f-rem{background:#8aa060}.f-lig{background:#c8d4ad}.f-des{background:var(--warn)}
+.f-pro{background:#1d3f8f}.f-rem{background:#7b8cf0}.f-lig{background:#4fa3e3}.f-des{background:#e88fb8}
+@media (prefers-color-scheme:dark){.f-pro{background:#2f5bd0}.f-rem{background:#9aa6ff}.f-lig{background:#62b8f2}.f-des{background:#f0a3c6}}
+/* iconos animados de las tarjetas de actividad */
+.sc .k{display:flex;align-items:center;gap:5px}
+.ic{width:15px;height:15px;flex:none;overflow:visible}
+.ic-fc{color:var(--bad);transform-origin:50% 55%;animation:latido 1.1s ease-in-out infinite}
+@keyframes latido{0%,40%,100%{transform:scale(1)}12%{transform:scale(1.22)}24%{transform:scale(.96)}32%{transform:scale(1.12)}}
+.ic-cal{color:#e0661a}.ic-cal .ll{transform-origin:50% 100%;animation:llama 1.4s ease-in-out infinite alternate}
+.ic-cal .nu{fill:#f5b52e;transform-origin:50% 100%;animation:llama 1s ease-in-out infinite alternate-reverse}
+@keyframes llama{0%{transform:scale(1,1) skewX(0)}50%{transform:scale(.94,1.08) skewX(-3deg)}100%{transform:scale(1.03,.95) skewX(3deg)}}
+.ic-pasos{color:var(--t-carrera)}.ic-pasos .p1{animation:paso 1.2s ease-in-out infinite}.ic-pasos .p2{animation:paso 1.2s ease-in-out -.6s infinite}
+@keyframes paso{0%,100%{opacity:.25;transform:translateY(1.5px)}50%{opacity:1;transform:translateY(-1px)}}
+.ic-int{color:var(--t-hyrox);animation:rayo 2.4s ease-in-out infinite}
+@keyframes rayo{0%,70%,100%{opacity:1;filter:none}78%{opacity:.35}86%{opacity:1;filter:drop-shadow(0 0 3px currentColor)}}
+@media (prefers-reduced-motion:reduce){.ic,.ic *{animation:none!important}}
 .e-rep{background:#5d8bb0}.e-baj{background:#e8b04a}.e-med{background:#e07a2a}.e-alt{background:#c0392b}
 .leg{display:flex;flex-wrap:wrap;gap:4px 10px;font-family:var(--mono);font-size:10.5px;color:var(--muted)}.leg b{display:inline-block;width:8px;height:8px;margin-right:4px;vertical-align:middle}
 .trend .seg{margin:6px 0 8px;max-width:180px}.chart .mt{stroke:var(--accent);stroke-width:1.5;stroke-dasharray:4 3}
@@ -955,13 +969,13 @@ function pintaSalud(){
   const stk = (parts) => { const tot = parts.reduce((a, p) => a + (p[1] || 0), 0) || 1; return `<div class="stk">${parts.map(([c, x]) => x ? `<i class="${c}" style="width:${x / tot * 100}%"></i>` : "").join("")}</div>`; };
   const hvc = {"Equilibrada":"ok", "Desequilibrada":"mid", "Baja":"bad"}[h.estado] || "";
   let html = nav + `<h3 class="st">Actividad</h3><div class="sgrid">
-    ${card("pasos", "", `<span class="k">Pasos</span><span class="v">${g.pasos != null ? g.pasos.toLocaleString("es-ES") : "—"}</span>
+    ${card("pasos", "", `<span class="k">${ICO.pasos}Pasos</span><span class="v">${g.pasos != null ? g.pasos.toLocaleString("es-ES") : "—"}</span>
       ${g.pasos_objetivo ? `<div class="pbar"><i class="${g.pasos >= g.pasos_objetivo ? "ok" : ""}" style="width:${pct(g.pasos, g.pasos_objetivo)}%"></i></div><span class="s">objetivo ${g.pasos_objetivo.toLocaleString("es-ES")}${g.km_andados ? ` · ${num(g.km_andados)} km` : ""}</span>` : ""}`)}
-    ${card("cal", "", `<span class="k">Calorías</span><span class="v">${g.calorias_total != null ? g.calorias_total.toLocaleString("es-ES") : "—"}<small>kcal</small></span>
+    ${card("cal", "", `<span class="k">${ICO.cal}Calorías</span><span class="v">${g.calorias_total != null ? g.calorias_total.toLocaleString("es-ES") : "—"}<small>kcal</small></span>
       <span class="s">activas ${g.calorias_activas ?? "—"} · reposo ${g.calorias_reposo ?? "—"}</span>`)}
-    ${card("fc", "", `<span class="k">FC en reposo</span><span class="v">${g.fc_reposo ?? "—"}<small>lpm</small></span>
+    ${card("fc", "", `<span class="k">${ICO.fc}FC en reposo</span><span class="v">${g.fc_reposo ?? "—"}<small>lpm</small></span>
       <span class="s">7 d: ${g.fc_reposo_7d ?? "—"} · mín ${g.fc_min ?? "—"} · máx ${g.fc_max ?? "—"}</span>`)}
-    ${card("int", "", `<span class="k">Min. intensidad</span><span class="v">${semInt}<small>/ ${objInt}</small></span>
+    ${card("int", "", `<span class="k">${ICO.int}Min. intensidad</span><span class="v">${semInt}<small>/ ${objInt}</small></span>
       <div class="pbar"><i class="${semInt >= objInt ? "ok" : ""}" style="width:${pct(semInt, objInt)}%"></i></div><span class="s">semana · hoy ${g.min_moderados ?? 0} mod. + ${g.min_vigorosos ?? 0} vig.</span>`)}
   </div><h3 class="st">Recuperación</h3><div class="sgrid">
     ${card("sueno", "full", `<span class="k">Sueño · noche hasta el ${fCorta(saludFecha)}</span><span class="v">${s.min != null ? hm(s.min) : "—"}${s.puntuacion != null ? `<small>· ${s.puntuacion} pts</small>` : ""}</span>
@@ -987,6 +1001,12 @@ function clickSalud(ev){
 const estCtrl = (g, d) => { const k = `control/${g}/${d}`; if (cola.includes(k)) return `<div class="state pend">Guardado en el móvil · se enviará al tener red</div>`; return (ctrl[g] || {})[d] && ctrl[g][d].updatedAt ? `<div class="state ok">✓ Enviado</div>` : ""; };
 // escala de botones con números enteros (desde 0 o desde 1 hasta 10); tocar el marcado lo borra
 const esc10 = (g, k, val, desde) => `<div class="esc" style="--n:${11 - desde}">${Array.from({length:11 - desde}, (_, i) => i + desde).map(n => `<button type="button" class="${val === n ? "on" : ""}" data-esc="${g}:${k}" data-v="${n}">${n}</button>`).join("")}</div>`;
+const ICO = {
+  fc:`<svg class="ic ic-fc" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 21s-7.5-4.6-9.6-9.3C.9 8.2 3 4.5 6.6 4.5c2.1 0 3.6 1.2 5.4 3.2 1.8-2 3.3-3.2 5.4-3.2 3.6 0 5.7 3.7 4.2 7.2C19.5 16.4 12 21 12 21z"/></svg>`,
+  cal:`<svg class="ic ic-cal" viewBox="0 0 24 24" aria-hidden="true"><path class="ll" fill="currentColor" d="M12 2c.6 3.4 5.5 6.3 5.5 11.5A5.5 5.5 0 0 1 12 22a5.5 5.5 0 0 1-5.5-5.5c0-2.6 1.4-4.2 2.6-5.4.2 1.7.9 2.8 2 3.3C10.6 10.6 11.3 5.6 12 2z"/><path class="nu" d="M12 13.5c.4 1.7 2.6 2.8 2.6 5A2.6 2.6 0 0 1 12 21a2.6 2.6 0 0 1-2.6-2.5c0-1.6 1.6-2.6 2.6-5z"/></svg>`,
+  pasos:`<svg class="ic ic-pasos" viewBox="0 0 24 24" aria-hidden="true"><g class="p1" fill="currentColor"><ellipse cx="8" cy="9" rx="2.6" ry="4.2" transform="rotate(-10 8 9)"/><ellipse cx="8.6" cy="15.6" rx="1.7" ry="1.4"/></g><g class="p2" fill="currentColor"><ellipse cx="16" cy="11" rx="2.6" ry="4.2" transform="rotate(10 16 11)"/><ellipse cx="15.4" cy="17.6" rx="1.7" ry="1.4"/></g></svg>`,
+  int:`<svg class="ic ic-int" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13.5 2 4 13.5h6.2L9 22l10-12.2h-6.3L13.5 2z"/></svg>`
+};
 const hm = m => `${Math.floor(m/60)} h ${String(m%60).padStart(2,"0")}`;
 const ACT = {running:"Carrera", trail_running:"Trail", treadmill_running:"Cinta", indoor_cardio:"Cardio", strength_training:"Fuerza", indoor_rowing:"Remo", cycling:"Bici", walking:"Andar", hiking:"Marcha", hiit:"HIIT"};
 function garminHTML(g){
