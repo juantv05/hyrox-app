@@ -1,6 +1,6 @@
 // Guarda la app (y las fuentes) para abrirla sin cobertura. Los datos van en el almacenamiento local.
-const C = "hyrox-app-v11";
-const FILES = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png", "apple-touch-icon.png", ...["maraton","agm","hyrox"].flatMap(k => [`img/fondo-${k}.webp`, `img/corredor-${k}.webp`]), "img/figura.webp", "img/figura-pixel.png"];
+const C = "hyrox-app-v12";
+const FILES = ["./", "index.html", "manifest.webmanifest", "sub60-192.png", "sub60-512.png", "sub60-180.png", ...["maraton","agm","hyrox"].flatMap(k => [`img/fondo-${k}.webp`, `img/corredor-${k}.webp`]), "img/figura.webp", "img/figura-pixel.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(C).then(c => c.addAll(FILES))); self.skipWaiting(); });
 self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== C).map(k => caches.delete(k))))); self.clients.claim(); });
 self.addEventListener("fetch", e => {
